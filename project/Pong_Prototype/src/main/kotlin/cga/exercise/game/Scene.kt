@@ -15,6 +15,7 @@ import org.joml.Math
 import org.joml.Vector2f
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.glfw.GLFW.*
+import java.awt.DisplayMode
 import java.lang.IllegalArgumentException
 import java.lang.Math.abs
 import kotlin.math.sin
@@ -27,6 +28,11 @@ class Scene(private val window: GameWindow) {
     //Shaders
     private val staticShader: ShaderProgram
     private val staticShader2: ShaderProgram
+
+    //Game variables
+    var player1Score = 0
+    var player2Score = 0
+    private var rolling = true
 
     /* TODO:
           2. Einbindung weiterer Texturen
@@ -185,6 +191,7 @@ class Scene(private val window: GameWindow) {
         player_movement(dt)
         ball_movement(dt)
         camera_switch(dt)
+        winner()
 
     }
 
@@ -211,7 +218,9 @@ class Scene(private val window: GameWindow) {
 
     fun ball_movement(dt: Float){
 
-        ball2.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
+        if (rolling == true) {
+            ball2.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
+        }
 
         //println("X Player1: " + player1.getPosition().x)
         //println("X Player2: " + player2.getPosition().x)
@@ -311,6 +320,34 @@ class Scene(private val window: GameWindow) {
 
         if (speed_ai_player < -max_speed_ai_player) {
             speed_ai_player = -max_speed_ai_player
+        }
+    }
+
+    fun resetGame(posX: Float, posZ: Float) {
+        rolling = false
+        speedZ = 0
+        speedX *= -1
+
+        ball2.translateLocal(Vector3f(-posX*1.668f, 0.0f, -posZ*1.668f)) //keine Ahnung wieso dieser Faktor..
+
+        rolling = true
+    }
+
+    fun winner() {
+        if (ball2.getPosition().x > player2.getPosition().x+2) {
+            player1Score++
+            println("SCORE  " + player1Score + " : " + player2Score)
+            val posX = ball2.getPosition().x
+            val posZ = ball2.getPosition().z
+            resetGame(posX,posZ)
+        }
+
+        if (ball2.getPosition().x < player1.getPosition().x-2) {
+            player2Score++
+            println("SCORE  " + player1Score + " : " + player2Score)
+            val posX = ball2.getPosition().x
+            val posZ = ball2.getPosition().z
+            resetGame(posX,posZ)
         }
     }
 }

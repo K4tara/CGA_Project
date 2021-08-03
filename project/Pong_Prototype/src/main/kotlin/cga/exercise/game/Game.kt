@@ -6,7 +6,7 @@ class Game(width: Int,
            height: Int,
            fullscreen: Boolean = false,
            vsync: Boolean = false,
-           title: String = "Pong_Prototype",
+           title: String = "PONG",
            GLVersionMajor: Int = 3,
            GLVersionMinor: Int = 3) : GameWindow(width, height, fullscreen, vsync, GLVersionMajor, GLVersionMinor, title, 4, 120.0f) {
 
