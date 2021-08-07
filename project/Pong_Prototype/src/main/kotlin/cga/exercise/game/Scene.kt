@@ -26,8 +26,10 @@ class Scene(private val window: GameWindow) {
         1. Potenzielle Shader/Animationen/Effekte erzeugen um den Look zu verändern bspw. temporär bei einem Pickup
     */
     //Shaders
-    private val staticShader: ShaderProgram
-    private val staticShader2: ShaderProgram
+    private val classicStaticShader: ShaderProgram
+    private val staticCelShader: ShaderProgram
+    private val effectShader: ShaderProgram
+    private var useShader: ShaderProgram
 
     //Game variables
     var player1Score = 0
@@ -37,10 +39,15 @@ class Scene(private val window: GameWindow) {
     private var itemZ = 0f
     private var itemBoundsX = 18
     private var itemBoundsZ = 12
-    private var bouncesTillItemSpawn = 2
+    private var bouncesTillItemSpawn = 5
     private var paddleReverseCount = 0
     private var itemSpawn = false
     private var placeItem = true
+    private var effectNumber = 0
+    private var effectTime = 15f
+    private var chaos = 0
+    private var confuse = 0
+    private var shake = 0
 
     /* TODO:
           2. Einbindung weiterer Texturen
@@ -79,11 +86,10 @@ class Scene(private val window: GameWindow) {
     //Player + ball movement parameters
     private var speed_player = 9.0f;
     private var bounds_player_z = 5.5f;
-
     private var speedZ = 0
     private var speedX = -6
-    private var maxSpeedZ = 8
-    private var maxSpeedX = 7
+    private var maxSpeedZ = 11
+    private var maxSpeedX = 10
     private var speed_ai_player = 0f
     private var max_speed_ai_player = 7f
 
@@ -91,8 +97,11 @@ class Scene(private val window: GameWindow) {
     //scene setup
     init {
 
-        staticShader = ShaderProgram("assets/shaders/simple_vert.glsl", "assets/shaders/simple_frag.glsl")
-        staticShader2 = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
+        classicStaticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
+        staticCelShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/effect_frag.glsl") //Toon effect (Cel shading)
+        effectShader = ShaderProgram("assets/shaders/effect3_vert.glsl", "assets/shaders/effect3_frag.glsl") //all effects in one shader
+
+        useShader = classicStaticShader
 
         //initial opengl state
         glClearColor(0f, 0f, 0f, 1.0f); GLError.checkThrow()
@@ -176,27 +185,32 @@ class Scene(private val window: GameWindow) {
 
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
-        staticShader2.use()
-        staticShader2.setUniform("sceneColour", Vector3f(1.0f,1.0f,1.0f))
+        useShader.use()
+        useShader.setUniform("sceneColour", Vector3f(1.0f,1.0f,1.0f))
+        useShader.setUniform("time",t)
+        useShader.setUniform("chaos", chaos) //LSD effect
+        useShader.setUniform("confuse", confuse) //inverted colors & y-axis
+        useShader.setUniform("shake", shake) //earthquake + light switching
 
-        camera.bind(staticShader2)
-        ground.render(staticShader2)
+        camera.bind(useShader)
+        ground.render(useShader)
 
         //staticShader2.setUniform("sceneColour", Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2))))
 
-        player1.render(staticShader2)
-        player2.render(staticShader2)
-        ball2.render(staticShader2)
-        wallDown.render(staticShader2)
-        wallUp.render(staticShader2)
+        wallDown.render(useShader)
+        wallUp.render(useShader)
+        player1.render(useShader)
+        player2.render(useShader)
 
         if (paddleReverseCount >= bouncesTillItemSpawn) {
             itemSpawn = true
-            item.render(staticShader2)
+            item.render(useShader)
         }
 
-        pointLight.bind(staticShader2,"cyclePoint")
-        spotLight.bind(staticShader2,"cycleSpot", camera.getCalculateViewMatrix())
+        ball2.render(useShader)
+
+        pointLight.bind(useShader,"cyclePoint")
+        spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
     }
 
     fun update(dt: Float, t: Float) {
@@ -207,16 +221,21 @@ class Scene(private val window: GameWindow) {
         ball_movement(dt)
         camera_switch(dt)
         winner()
+        //playerAI(dt)
+        controlBallspeed()
 
         if (itemSpawn && placeItem) {
             placeItem()
+        }
+
+        //end effects
+        if (effectNumber > 0) {
+            countDownEffect(dt)
         }
     }
 
 
     private fun player_movement(dt: Float) {
-        //playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
-        //AI_chase()
 
         if (window.getKeyState(GLFW_KEY_W) && player1.getPosition().z >= -bounds_player_z ) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, -speed_player * dt))
@@ -241,17 +260,6 @@ class Scene(private val window: GameWindow) {
             ball2.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
         }
 
-        //println("X Player1: " + player1.getPosition().x)
-        //println("X Player2: " + player2.getPosition().x)
-        //println("X Ball: " + ball2.getPosition().x)
-        //println("Z Player1: " + player1.getPosition().z)
-        //println("Z Player2: " + player2.getPosition().z)
-        //println("Z Ball: " + ball2.getPosition().z)
-        //println("Z WallUp: " + wallUp.getPosition().z)
-        //println("Z WallDown: " + wallDown.getPosition().z)
-        //println("X Item: " + item.getPosition().x)
-        //println("Z Item: " + item.getPosition().z)
-
         //check for intersection (cheat mode)
         //-> jede Seite des Objekts auf Überschneidung überprüfen (Zahlen = Hälfte der Breite der Objekte)
         if (ball2.getPosition().x <= player1.getPosition().x+0.5 && ball2.getPosition().x >= player1.getPosition().x-0.5 &&
@@ -264,22 +272,16 @@ class Scene(private val window: GameWindow) {
             reverse(player2)
         }
 
-        //AI intersection -> same as player 2
-        /*if (ball2.getPosition().x >= playerAI.getPosition().x-0.5 && ball2.getPosition().x <= playerAI.getPosition().x+0.5 &&
-                ball2.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball2.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
-            reverse(playerAI)
-        }*/
-
         //item intersection (großzügig gewählte Parameter -> man soll das Item auch treffen können)
         if (itemSpawn &&
                 item.getPosition().x >= ball2.getPosition().x-0.5 && item.getPosition().x <= ball2.getPosition().x+0.5 &&
                 item.getPosition().z+0.5 <= ball2.getPosition().z+1 && item.getPosition().z-0.5 >= ball2.getPosition().z-1) {
 
-            itemSpawn = false
-            paddleReverseCount = -2 //next item spawn in bouncesTillItemSpawn +2
-            placeItem = true
             println("item activated!")
-            //TODO: change shader, effects ...
+            itemSpawn = false
+            paddleReverseCount = -3
+            placeItem = true
+            effect()
         }
 
         //bei den Wänden interessiert uns nur eine Seite
@@ -330,7 +332,9 @@ class Scene(private val window: GameWindow) {
             speedX *= -1
             speedZ += ((b_center - o_center) * 2).toInt()  // centerBall - centerPaddle; 2 = Konstante zur Erhöhung des Abprallwinkels
         }
+    }
 
+    private fun controlBallspeed() {
         if (speedZ > maxSpeedZ) {
             speedZ = maxSpeedZ
         }
@@ -368,9 +372,10 @@ class Scene(private val window: GameWindow) {
         speedZ = 0
         speedX *= -1
         paddleReverseCount = 0
+        itemSpawn = false
+        endEffect()
 
         ball2.translateLocal(Vector3f(-posX*1.668f, 0.0f, -posZ*1.668f)) //keine Ahnung wieso dieser Faktor..
-
         rolling = true
     }
 
@@ -397,18 +402,97 @@ class Scene(private val window: GameWindow) {
         itemZ = Random.nextInt(-itemBoundsZ,itemBoundsZ).toFloat()
 
         //can´t move out of bounds
-        if (item.getPosition().z+itemZ > -13 && item.getPosition().z+itemZ < 13 &&
-                item.getPosition().x+itemX > -19 && item.getPosition().x+itemX < 19) {
+        if (item.getPosition().z+itemZ >= -6 && item.getPosition().z+itemZ <= 6 &&
+                item.getPosition().x+itemX >= -11 && item.getPosition().x+itemX <= 11) {
 
             item.translateLocal(Vector3f(itemX, 0.0f, itemZ))
             placeItem = false
             println("new item has appeared!")
+            println("Item Position X: ${item.getPosition().x}, Z: ${item.getPosition().z}")
         }
-
-        itemBoundsX--
-        itemBoundsZ--
-        if (itemBoundsX <= 4) itemBoundsX = 4
-        if (itemBoundsZ <= 3) itemBoundsZ = 3
     }
 
+    private fun effect() {
+        val effect = Random.nextInt(1,5) //1 bis 4
+
+        when (effect) {
+            1 -> {
+                useShader = effectShader
+                chaos = 1
+            }
+            2 -> {
+                useShader = effectShader
+                confuse = 1
+            }
+            3 -> {
+                useShader = effectShader
+                shake = 1
+            }
+            4 -> speedUp()
+        }
+
+        effectNumber = effect
+    }
+
+    private fun endEffect() {
+        when (effectNumber) {
+            1 -> {
+                useShader = classicStaticShader
+                chaos = 0
+            }
+            2 -> {
+                useShader = classicStaticShader
+                confuse = 0
+            }
+            3 -> {
+                useShader = classicStaticShader
+                shake = 0
+            }
+            4 -> slowDown()
+        }
+
+        effectNumber = 0
+    }
+
+    private fun speedUp() {
+        if (speedX > 0) {
+            speedX = maxSpeedX
+        } else {
+            speedX = -maxSpeedX
+        }
+
+        speedZ * 1.4
+    }
+
+    private fun slowDown() {
+        if (speedX > 0) {
+            speedX = 6
+        } else {
+            speedX = -6
+        }
+
+        speedZ / 1.4
+    }
+
+    private fun playerAI(dt: Float) {
+        playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
+        AI_chase()
+
+        //AI intersection -> same as player 2
+        if (ball2.getPosition().x >= playerAI.getPosition().x-0.5 && ball2.getPosition().x <= playerAI.getPosition().x+0.5 &&
+                ball2.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball2.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
+            reverse(playerAI)
+        }
+    }
+
+    private fun countDownEffect(dt: Float) {
+        if (effectTime > 0f) {
+            effectTime -= dt
+
+            if (effectTime <= 0f){
+                endEffect()
+                effectTime = 15f
+            }
+        }
+    }
 }
