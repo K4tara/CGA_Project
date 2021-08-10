@@ -52,7 +52,7 @@ void main() {
         vec2 pos = vec2(tc.x + sin(time) * strength, tc.y + cos(time) * strength);
         vertexData.texture = pos * tcMultiplier;
     } else if (confuse == 1) {
-        gl_Position.y *= -1;
+        //gl_Position.y *= -1;
         vertexData.texture = tc * tcMultiplier;
     } else {
         vertexData.texture = tc * tcMultiplier;

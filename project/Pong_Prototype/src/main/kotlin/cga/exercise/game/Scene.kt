@@ -17,14 +17,12 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.glfw.GLFW.*
 import java.lang.IllegalArgumentException
 import java.lang.Math.abs
+import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
 class Scene(private val window: GameWindow) {
 
-    /* TODO:
-        1. Potenzielle Shader/Animationen/Effekte erzeugen um den Look zu verändern bspw. temporär bei einem Pickup
-    */
     //Shaders
     private val classicStaticShader: ShaderProgram
     private val staticCelShader: ShaderProgram
@@ -63,7 +61,7 @@ class Scene(private val window: GameWindow) {
         3. Angemessene Modelle für Spieler, Ball, Pickups und Hintergrund raussuchen, anpassen und einbinden
     */
     //Models
-    private var player1 = ModelLoader.loadModel("assets/models/test/untitled.obj",Math.toRadians(-90.0f), Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
+    private var player1 = ModelLoader.loadModel("assets/models/player.obj",Math.toRadians(-90.0f), Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     private var player2 = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     private var playerAI = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     private var wallDown = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
@@ -78,14 +76,26 @@ class Scene(private val window: GameWindow) {
     private var pointLight = Pointlight(Vector3f(),Vector3f())
     private var spotLight = Spotlight(Vector3f(),Vector3f())
 
-    //Mouse movement
+    //Mouse movement, Camera
     private var oldMousePosX: Double = -1.0
     private var oldMousePosY: Double = -1.0
     private var bool: Boolean = false
+    private var view1: Boolean = false
+    private var view2: Boolean = false
+    private var view3: Boolean = false
+    private var viewActive = 1 //welche Ansicht ist gerade aktiv (1,2 oder 3)
 
     //Player + ball movement parameters
     private var speed_player = 9.0f;
     private var bounds_player_z = 5.5f;
+    private var inBounds1 = false
+    private var inBounds2 = false
+    private var inBounds1_1 = false
+    private var inBounds2_1 = false
+    private var keyW = false
+    private var keyS = false
+    private var keyUp = false
+    private var keyDown = false
     private var speedZ = 0
     private var speedX = -6
     private var maxSpeedZ = 11
@@ -126,7 +136,7 @@ class Scene(private val window: GameWindow) {
         //Ground + ball
         val res2: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/ground.obj")
         val objMesh2: OBJLoader.OBJMesh = res2.objects[0].meshes[0]
-        val ball2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/ball.obj")
+        val ball2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/test/untitled.obj")
         val ball2_obj_mesh: OBJLoader.OBJMesh = ball2_obj.objects[0].meshes[0]
 
         //Material Ground
@@ -201,14 +211,11 @@ class Scene(private val window: GameWindow) {
         useShader.setUniform("sceneColour", Vector3f(1.0f,1.0f,1.0f))
         useShader.setUniform("time",t)
         useShader.setUniform("chaos", chaos) //LSD effect
-        useShader.setUniform("confuse", confuse) //inverted colors & y-axis
+        useShader.setUniform("confuse", confuse) //inverted colors & TODO: player movement
         useShader.setUniform("shake", shake) //earthquake + light switching
 
         camera.bind(useShader)
         ground.render(useShader)
-
-        //staticShader2.setUniform("sceneColour", Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2))))
-
         wallDown.render(useShader)
         wallUp.render(useShader)
         player1.render(useShader)
@@ -231,9 +238,9 @@ class Scene(private val window: GameWindow) {
 
         player_movement(dt)
         ball_movement(dt)
-        camera_switch(dt)
+        camera_switch(dt,t)
         winner()
-        //playerAI(dt)
+        //playerAI(dt,t)
         controlBallspeed()
 
         if (itemSpawn && placeItem) {
@@ -246,29 +253,38 @@ class Scene(private val window: GameWindow) {
         }
     }
 
-
     private fun player_movement(dt: Float) {
+        inBounds1 = player1.getPosition().z >= -bounds_player_z
+        inBounds1_1 = player1.getPosition().z <= bounds_player_z
+        inBounds2 = player2.getPosition().z >= -bounds_player_z
+        inBounds2_1 = player2.getPosition().z <= bounds_player_z
 
-        if (window.getKeyState(GLFW_KEY_W) && player1.getPosition().z >= -bounds_player_z ) {
+        keyW = window.getKeyState(GLFW_KEY_W)
+        keyS = window.getKeyState(GLFW_KEY_S)
+        keyUp = window.getKeyState(GLFW_KEY_UP)
+        keyDown = window.getKeyState(GLFW_KEY_DOWN)
+
+
+        if (keyW && inBounds1) { //player1.getPosition().z >= -bounds_player_z) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, -speed_player * dt))
         }
 
-        if (window.getKeyState(GLFW_KEY_S) && player1.getPosition().z <= bounds_player_z ) {
+        if (keyS && inBounds1_1) { //player1.getPosition().z <= bounds_player_z) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
         }
 
-        if (window.getKeyState(GLFW_KEY_UP) && player2.getPosition().z >= -bounds_player_z) {
+        if (keyUp && inBounds2) { //player2.getPosition().z >= -bounds_player_z) {
             player2.translateLocal(Vector3f(0.0f, 0.0f, -speed_player  * dt))
         }
 
-        if (window.getKeyState(GLFW_KEY_DOWN) && player2.getPosition().z <= bounds_player_z ) {
+        if (keyDown && inBounds2_1) { //player2.getPosition().z <= bounds_player_z) {
             player2.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
         }
     }
 
     private fun ball_movement(dt: Float){
 
-        if (rolling == true) {
+        if (rolling) {
             ball2.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
         }
 
@@ -306,10 +322,52 @@ class Scene(private val window: GameWindow) {
         }
     }
 
-    private fun camera_switch(dt: Float){
-        /* TODO:
-            6. Ein/Ausschalten einer anderen Perspektive bspw. freie Bewegung der Kamera mit der Maus (wäre direkt auch bei Entwicklung hilfreich)
-        */
+    private fun camera_switch(dt: Float, t:Float) {
+        //Boolwerte zum sicherstellen, dass die Operationen jeweils nur einmal hintereinander ausgeführt werden
+        //wenn in Position 2 oder 3: zuerst zurück nach 1
+
+        //Top/Down-Ansicht (Standard)
+        if (window.getKeyState(GLFW_KEY_1)) {
+            if (view2 && view1 == false) {
+                camera.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                camera.translateLocal(Vector3f(0.0f,-4.0f,-3.0f))
+                viewActive = 1
+                view1 = true
+                view2 = false
+            }
+
+            if (view3 && view1 == false) {
+                camera.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
+                camera.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                camera.translateLocal(Vector3f(0.0f,-2.0f,-5.0f))
+                viewActive = 1
+                view1 = true
+                view3 = false
+            }
+        }
+
+        //Seitenansicht
+        if (window.getKeyState(GLFW_KEY_2) && viewActive == 1) {
+            if (view2 == false) {
+                camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                camera.translateLocal(Vector3f(0.0f,4.0f,3.0f))
+                viewActive = 2
+                view2 = true
+                view1 = false
+            }
+        }
+
+        //3rd-Person Ansicht (für Spieler 1)
+        if (window.getKeyState(GLFW_KEY_3) && viewActive == 1) {
+            if (view3 == false) {
+                camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                camera.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
+                camera.translateLocal(Vector3f(0.0f,2.0f,5.0f))
+                viewActive = 3
+                view3 = true
+                view1 = false
+            }
+        }
     }
 
     fun onKey(key: Int, scancode: Int, action: Int, mode: Int) {}
@@ -322,7 +380,8 @@ class Scene(private val window: GameWindow) {
         oldMousePosY = ypos
 
         if (bool) {
-              //camera.rotateAroundPoint(0.0f, Math.toRadians(deltaX.toFloat() * 0.05f), 0.0f, Vector3f(0.0f))
+            //camera.rotateAroundPoint(Math.toRadians(deltaY.toFloat() * 0.05f),0.0f,0.0f, Vector3f(0.0f))
+            //camera.rotateAroundPoint(0.0f, Math.toRadians(deltaX.toFloat() * 0.05f), 0.0f, Vector3f(0.0f))
         }
         bool = true
     }
@@ -361,21 +420,6 @@ class Scene(private val window: GameWindow) {
 
         if (speedX < -maxSpeedX) {
             speedX = -maxSpeedX
-        }
-    }
-
-    private fun AI_chase() {
-        val p_center = (7 + playerAI.getPosition().z) + (4/2)
-        val b_center = (9 + ball2.getPosition().z) + (1/2)
-
-        speed_ai_player += ((b_center - p_center) * 1.2).toInt()
-
-        if (speed_ai_player > max_speed_ai_player) {
-            speed_ai_player = max_speed_ai_player
-        }
-
-        if (speed_ai_player < -max_speed_ai_player) {
-            speed_ai_player = -max_speed_ai_player
         }
     }
 
@@ -435,6 +479,7 @@ class Scene(private val window: GameWindow) {
             2 -> {
                 useShader = effectShader
                 confuse = 1
+                //speed_player *= -1
             }
             3 -> {
                 useShader = effectShader
@@ -455,6 +500,7 @@ class Scene(private val window: GameWindow) {
             2 -> {
                 useShader = classicStaticShader
                 confuse = 0
+                //speed_player *= -1
             }
             3 -> {
                 useShader = classicStaticShader
@@ -486,9 +532,24 @@ class Scene(private val window: GameWindow) {
         speedZ / 1.4
     }
 
-    private fun playerAI(dt: Float) {
-        playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
-        AI_chase()
+    private fun playerAI(dt: Float, t: Float) {
+        val p_center = (8 + playerAI.getPosition().z) + (4/2)
+        val b_center = (9 + ball2.getPosition().z) + (2/2)
+        var move = ((b_center - p_center)*1).toInt()
+
+        if (playerAI.getPosition().z+move >= -bounds_player_z && playerAI.getPosition().z+move <= bounds_player_z) {
+            playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
+        }
+
+        speed_ai_player += move
+
+        if (speed_ai_player > max_speed_ai_player) {
+            speed_ai_player = max_speed_ai_player
+        }
+
+        if (speed_ai_player < -max_speed_ai_player) {
+            speed_ai_player = -max_speed_ai_player
+        }
 
         //AI intersection -> same as player 2
         if (ball2.getPosition().x >= playerAI.getPosition().x-0.5 && ball2.getPosition().x <= playerAI.getPosition().x+0.5 &&
