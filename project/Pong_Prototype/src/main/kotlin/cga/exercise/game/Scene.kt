@@ -55,13 +55,19 @@ class Scene(private val window: GameWindow) {
     private var ball2_mesh: Mesh
     private var player1_mesh: Mesh
     private var player2_mesh: Mesh
+    private var item_mesh: Mesh
     private var wall_mesh: Mesh
+    private var wallUp_mesh: Mesh
+    private var wallDown_mesh: Mesh
 
     private var ground = Renderable()
     private var ball2 = Renderable()
     private var player1 = Renderable()
     private var player2 = Renderable()
+    private var item = Renderable()
     private var wall = Renderable()
+    private var wallUp = Renderable()
+    private var wallDown = Renderable()
     private var camera = PongCamera()
 
     /* TODO:
@@ -71,10 +77,10 @@ class Scene(private val window: GameWindow) {
    // private var player1 = ModelLoader.loadModel("assets/models/player.obj",Math.toRadians(-90.0f), Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     // private var player2 = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     private var playerAI = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
-    private var wallDown = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    private var wallUp = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
+    //private var wallDown = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
+    //private var wallUp = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
     private var ball = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    private var item = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
+    // private var item = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
     /* TODO:
         4. Anpasssung möglicher weiterer Lichtquellen bspw. mit Fokus auf Ball oder Spieler
     */
@@ -104,7 +110,7 @@ class Scene(private val window: GameWindow) {
     private var keyUp = false
     private var keyDown = false
     private var speedZ = 0
-    private var speedX = -6
+    private var speedX = -20
     private var maxSpeedZ = 11
     private var maxSpeedX = 10
     private var speed_ai_player = 0f
@@ -147,14 +153,23 @@ class Scene(private val window: GameWindow) {
         val ball2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/test/untitled.obj")
         val ball2_obj_mesh: OBJLoader.OBJMesh = ball2_obj.objects[0].meshes[0]
 
-        val player1_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/sphere.obj")
+        val player1_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/player.obj")
         val player1_obj_mesh: OBJLoader.OBJMesh = player1_obj.objects[0].meshes[0]
 
-        val player2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/sphere.obj")
+        val player2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/player.obj")
         val player2_obj_mesh: OBJLoader.OBJMesh = player2_obj.objects[0].meshes[0]
 
-        val wall_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/sphere.obj")
+        val item_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/item.obj")
+        val item_obj_mesh: OBJLoader.OBJMesh = item_obj.objects[0].meshes[0]
+
+        val wall_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
         val wall_obj_mesh: OBJLoader.OBJMesh = wall_obj.objects[0].meshes[0]
+
+        val wallUp_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
+        val wallUp_obj_mesh: OBJLoader.OBJMesh = wallUp_obj.objects[0].meshes[0]
+
+        val wallDown_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
+        val wallDown_obj_mesh: OBJLoader.OBJMesh = wallDown_obj.objects[0].meshes[0]
 
         //Material Ground
         val texture_emit = Texture2D("assets/textures/grass_emit.png",true)
@@ -180,8 +195,8 @@ class Scene(private val window: GameWindow) {
 
         //Material Player1
         val texture_emit3 = Texture2D("assets/textures/player1.png",true)
-        val texture_diff3 = Texture2D("assets/textures/grass_diff.png",true)
-        val texture_spec3 = Texture2D("assets/textures/grass_diff.png",true)
+        val texture_diff3 = Texture2D("assets/textures/player1.png",true)
+        val texture_spec3 = Texture2D("assets/textures/player1.png",true)
 
         texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
         texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
@@ -199,6 +214,17 @@ class Scene(private val window: GameWindow) {
         texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
 
         val player2Material = Material(texture_diff4, texture_emit4, texture_spec4,30.0f, Vector2f(64.0f,64.0f))
+
+        //Material Item
+        val texture_emit6 = Texture2D("assets/textures/item.png",true)
+        val texture_diff6 = Texture2D("assets/textures/item.png",true)
+        val texture_spec6 = Texture2D("assets/textures/item.png",true)
+
+        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+
+        val itemMaterial = Material(texture_diff6, texture_emit6, texture_spec6,30.0f, Vector2f(64.0f,64.0f))
 
         //Material Wall
         val texture_emit5 = Texture2D("assets/textures/wall.png",true)
@@ -224,8 +250,17 @@ class Scene(private val window: GameWindow) {
         player2_mesh = Mesh(player2_obj_mesh.vertexData, player2_obj_mesh.indexData, vertexAttributes, player2Material)
         player2.list.add(player2_mesh)
 
+        item_mesh = Mesh( item_obj_mesh.vertexData,  item_obj_mesh.indexData, vertexAttributes,  itemMaterial)
+        item.list.add(item_mesh)
+
         wall_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
         wall.list.add(wall_mesh)
+
+        wallUp_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
+        wallUp.list.add(wallUp_mesh)
+
+        wallDown_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
+        wallDown.list.add(wallDown_mesh)
 
 
         //Lighting
@@ -242,7 +277,7 @@ class Scene(private val window: GameWindow) {
 
         ball.scaleLocal(Vector3f(0.8f))
         ball.translateLocal(Vector3f(0.0f, 0.0f, 0.0f))
-        ball2.scaleLocal(Vector3f(0.6f))
+        ball2.scaleLocal(Vector3f(0.4f))
         ball2.translateLocal(Vector3f(0.0f, 0.0f, 0.0f))
         wallDown.translateLocal(Vector3f(0.0f, 0.0f, 7.0f))
         wallUp.translateLocal(Vector3f(0.0f, 0.0f, -7.0f))
