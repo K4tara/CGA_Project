@@ -47,25 +47,12 @@ class Scene(private val window: GameWindow) {
     private var confuse = 0
     private var shake = 0
 
-    /* TODO:
-          2. Einbindung weiterer Texturen
-    */
     //Objects + Camera
-    private var mesh4: Mesh
-    private var ball2_mesh: Mesh
-    private var player1_mesh: Mesh
-    private var player2_mesh: Mesh
-    private var item_mesh: Mesh
-    private var wall_mesh: Mesh
-    private var wallUp_mesh: Mesh
-    private var wallDown_mesh: Mesh
-
     private var ground = Renderable()
-    private var ball2 = Renderable()
+    private var ball = Renderable()
     private var player1 = Renderable()
     private var player2 = Renderable()
     private var item = Renderable()
-    private var wall = Renderable()
     private var wallUp = Renderable()
     private var wallDown = Renderable()
     private var camera = PongCamera()
@@ -79,7 +66,7 @@ class Scene(private val window: GameWindow) {
     private var playerAI = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
     //private var wallDown = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
     //private var wallUp = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    private var ball = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
+    // private var ball = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
     // private var item = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
     /* TODO:
         4. Anpasssung möglicher weiterer Lichtquellen bspw. mit Fokus auf Ball oder Spieler
@@ -116,8 +103,7 @@ class Scene(private val window: GameWindow) {
     private var speed_ai_player = 0f
     private var max_speed_ai_player = 7f
 
-
-    //scene setup
+    //Scene setup
     init {
 
         classicStaticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
@@ -146,122 +132,48 @@ class Scene(private val window: GameWindow) {
         val attrNorm = VertexAttribute(2,3, GL_FLOAT, false, stride, 5 * 4)
         val vertexAttributes = arrayOf(attrPos, attrTC, attrNorm)
 
-        //Ground + ball
-        val res2: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/ground.obj")
-        val objMesh2: OBJLoader.OBJMesh = res2.objects[0].meshes[0]
+        //Load Models + Assign Textures
+        load_models_assign_textures(vertexAttributes, ground,
+            "assets/models/ground.obj",
+            "assets/textures/ground_emit.png",
+            "assets/textures/ground_diff.png",
+            "assets/textures/ground_spec.png")
 
-        val ball2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/test/untitled.obj")
-        val ball2_obj_mesh: OBJLoader.OBJMesh = ball2_obj.objects[0].meshes[0]
+        load_models_assign_textures(vertexAttributes, ball,
+            "assets/models/ball.obj",
+            "assets/textures/ball_emit.png",
+            "assets/textures/ball_diff.png",
+            "assets/textures/ball_spec.png")
 
-        val player1_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/player.obj")
-        val player1_obj_mesh: OBJLoader.OBJMesh = player1_obj.objects[0].meshes[0]
+        load_models_assign_textures(vertexAttributes, player1,
+            "assets/models/player.obj",
+            "assets/textures/player1_emit.png",
+            "assets/textures/player1_diff.png",
+            "assets/textures/player1_spec.png")
 
-        val player2_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/player.obj")
-        val player2_obj_mesh: OBJLoader.OBJMesh = player2_obj.objects[0].meshes[0]
+        load_models_assign_textures(vertexAttributes, player2,
+            "assets/models/player.obj",
+            "assets/textures/player2_emit.png",
+            "assets/textures/player2_diff.png",
+            "assets/textures/player2_spec.png")
 
-        val item_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/item.obj")
-        val item_obj_mesh: OBJLoader.OBJMesh = item_obj.objects[0].meshes[0]
+        load_models_assign_textures(vertexAttributes, item,
+            "assets/models/item.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
 
-        val wall_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
-        val wall_obj_mesh: OBJLoader.OBJMesh = wall_obj.objects[0].meshes[0]
+        load_models_assign_textures(vertexAttributes, wallUp,
+            "assets/models/wall.obj",
+            "assets/textures/wall_emit.png",
+            "assets/textures/wall_diff.png",
+            "assets/textures/wall_spec.png")
 
-        val wallUp_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
-        val wallUp_obj_mesh: OBJLoader.OBJMesh = wallUp_obj.objects[0].meshes[0]
-
-        val wallDown_obj: OBJLoader.OBJResult = OBJLoader.loadOBJ("assets/models/wall.obj")
-        val wallDown_obj_mesh: OBJLoader.OBJMesh = wallDown_obj.objects[0].meshes[0]
-
-        //Material Ground
-        val texture_emit = Texture2D("assets/textures/grass_emit.png",true)
-        val texture_diff = Texture2D("assets/textures/grass_diff.png",true)
-        val texture_spec = Texture2D("assets/textures/grass_spec.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val groundMaterial = Material(texture_diff, texture_emit, texture_spec,90.0f, Vector2f(64.0f,64.0f))
-
-        //Material ball
-        val texture_emit2 = Texture2D("assets/textures/ball.png",true)
-        val texture_diff2 = Texture2D("assets/textures/ball.png",true)
-        val texture_spec2 = Texture2D("assets/textures/ball.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val ballMaterial = Material(texture_diff2, texture_emit2, texture_spec2,90.0f, Vector2f(64.0f,64.0f))
-
-        //Material Player1
-        val texture_emit3 = Texture2D("assets/textures/player1.png",true)
-        val texture_diff3 = Texture2D("assets/textures/player1.png",true)
-        val texture_spec3 = Texture2D("assets/textures/player1.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val player1Material = Material(texture_diff3, texture_emit3, texture_spec3,30.0f, Vector2f(64.0f,64.0f))
-
-        //Material Player2
-        val texture_emit4 = Texture2D("assets/textures/player2.png",true)
-        val texture_diff4 = Texture2D("assets/textures/grass_diff.png",true)
-        val texture_spec4 = Texture2D("assets/textures/grass_spec.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val player2Material = Material(texture_diff4, texture_emit4, texture_spec4,30.0f, Vector2f(64.0f,64.0f))
-
-        //Material Item
-        val texture_emit6 = Texture2D("assets/textures/item.png",true)
-        val texture_diff6 = Texture2D("assets/textures/item.png",true)
-        val texture_spec6 = Texture2D("assets/textures/item.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val itemMaterial = Material(texture_diff6, texture_emit6, texture_spec6,30.0f, Vector2f(64.0f,64.0f))
-
-        //Material Wall
-        val texture_emit5 = Texture2D("assets/textures/wall.png",true)
-        val texture_diff5 = Texture2D("assets/textures/wall.png",true)
-        val texture_spec5 = Texture2D("assets/textures/wall.png",true)
-
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-
-        val wallMaterial = Material(texture_diff5, texture_emit5, texture_spec5,90.0f, Vector2f(64.0f,64.0f))
-
-        //Assign Meshes
-        mesh4 = Mesh(objMesh2.vertexData, objMesh2.indexData, vertexAttributes, groundMaterial)
-        ground.list.add(mesh4)
-
-        ball2_mesh = Mesh(ball2_obj_mesh.vertexData, ball2_obj_mesh.indexData, vertexAttributes, ballMaterial)
-        ball2.list.add(ball2_mesh)
-
-        player1_mesh = Mesh(player1_obj_mesh.vertexData, player1_obj_mesh.indexData, vertexAttributes, player1Material)
-        player1.list.add(player1_mesh)
-
-        player2_mesh = Mesh(player2_obj_mesh.vertexData, player2_obj_mesh.indexData, vertexAttributes, player2Material)
-        player2.list.add(player2_mesh)
-
-        item_mesh = Mesh( item_obj_mesh.vertexData,  item_obj_mesh.indexData, vertexAttributes,  itemMaterial)
-        item.list.add(item_mesh)
-
-        wall_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
-        wall.list.add(wall_mesh)
-
-        wallUp_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
-        wallUp.list.add(wallUp_mesh)
-
-        wallDown_mesh = Mesh(wall_obj_mesh.vertexData, wall_obj_mesh.indexData, vertexAttributes, wallMaterial)
-        wallDown.list.add(wallDown_mesh)
-
+        load_models_assign_textures(vertexAttributes, wallDown,
+            "assets/models/wall.obj",
+            "assets/textures/wall_emit.png",
+            "assets/textures/wall_diff.png",
+            "assets/textures/wall_spec.png")
 
         //Lighting
         pointLight = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
@@ -275,10 +187,8 @@ class Scene(private val window: GameWindow) {
         playerAI.scaleLocal(Vector3f(0.8f))
         playerAI.translateLocal(Vector3f(12.0f, 0.0f, 0.0f))
 
-        ball.scaleLocal(Vector3f(0.8f))
+        ball.scaleLocal(Vector3f(0.4f))
         ball.translateLocal(Vector3f(0.0f, 0.0f, 0.0f))
-        ball2.scaleLocal(Vector3f(0.4f))
-        ball2.translateLocal(Vector3f(0.0f, 0.0f, 0.0f))
         wallDown.translateLocal(Vector3f(0.0f, 0.0f, 7.0f))
         wallUp.translateLocal(Vector3f(0.0f, 0.0f, -7.0f))
         wallDown.scaleLocal(Vector3f(7f,1f,1f))
@@ -292,10 +202,32 @@ class Scene(private val window: GameWindow) {
         spotLight.rotateLocal(Math.toRadians(-10.0f), Math.PI.toFloat(),0.0f)
 
         //Parents
-        pointLight.parent = ball2
+        pointLight.parent = ball
         //spotLight.parent = ball2
         //camera.parent = cycle
 
+    }
+
+
+    fun update(dt: Float, t: Float) {
+
+        pointLight.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
+
+        player_movement(dt)
+        ball_movement(dt)
+        camera_switch(dt,t)
+        winner()
+        //playerAI(dt,t)
+        controlBallspeed()
+
+        if (itemSpawn && placeItem) {
+            placeItem()
+        }
+
+        //end effects
+        if (effectNumber > 0) {
+            countDownEffect(dt)
+        }
     }
 
     fun render(dt: Float, t: Float) {
@@ -321,31 +253,31 @@ class Scene(private val window: GameWindow) {
             item.render(useShader)
         }
 
-        ball2.render(useShader)
+        ball.render(useShader)
 
         pointLight.bind(useShader,"cyclePoint")
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
     }
 
-    fun update(dt: Float, t: Float) {
+    fun load_models_assign_textures (vertexAttributes : Array<VertexAttribute>, renderable: Renderable, modelPath: String,
+                                     texture_emit_path: String, texture_diff_path: String, texture_spec_path: String){
+        var mesh: Mesh
 
-        pointLight.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
+        val obj: OBJLoader.OBJResult = OBJLoader.loadOBJ(modelPath)
+        val obj_mesh: OBJLoader.OBJMesh = obj.objects[0].meshes[0]
 
-        player_movement(dt)
-        ball_movement(dt)
-        camera_switch(dt,t)
-        winner()
-        //playerAI(dt,t)
-        controlBallspeed()
+        val texture_emit = Texture2D(texture_emit_path,true)
+        val texture_diff = Texture2D(texture_diff_path,true)
+        val texture_spec = Texture2D(texture_spec_path,true)
 
-        if (itemSpawn && placeItem) {
-            placeItem()
-        }
+        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
 
-        //end effects
-        if (effectNumber > 0) {
-            countDownEffect(dt)
-        }
+        val material = Material(texture_diff, texture_emit, texture_spec,10.0f, Vector2f(64.0f,64.0f))
+
+        mesh = Mesh(obj_mesh.vertexData, obj_mesh.indexData, vertexAttributes, material)
+        renderable.list.add(mesh)
     }
 
     private fun player_movement(dt: Float) {
@@ -380,25 +312,25 @@ class Scene(private val window: GameWindow) {
     private fun ball_movement(dt: Float){
 
         if (rolling) {
-            ball2.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
+            ball.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
         }
 
         //check for intersection (cheat mode)
         //-> jede Seite des Objekts auf Überschneidung überprüfen (Zahlen = Hälfte der Breite der Objekte)
-        if (ball2.getPosition().x <= player1.getPosition().x+0.5 && ball2.getPosition().x >= player1.getPosition().x-0.5 &&
-                ball2.getPosition().z+0.5 <= player1.getPosition().z+2 && ball2.getPosition().z-0.5 >= player1.getPosition().z-2) {
+        if (ball.getPosition().x <= player1.getPosition().x+0.5 && ball.getPosition().x >= player1.getPosition().x-0.5 &&
+                ball.getPosition().z+0.5 <= player1.getPosition().z+2 && ball.getPosition().z-0.5 >= player1.getPosition().z-2) {
             reverse(player1)
         }
 
-        if (ball2.getPosition().x >= player2.getPosition().x-0.5 && ball2.getPosition().x <= player2.getPosition().x+0.5 &&
-                ball2.getPosition().z+0.5 <= player2.getPosition().z+2 && ball2.getPosition().z-0.5 >= player2.getPosition().z-2) {
+        if (ball.getPosition().x >= player2.getPosition().x-0.5 && ball.getPosition().x <= player2.getPosition().x+0.5 &&
+                ball.getPosition().z+0.5 <= player2.getPosition().z+2 && ball.getPosition().z-0.5 >= player2.getPosition().z-2) {
             reverse(player2)
         }
 
         //item intersection (großzügig gewählte Parameter -> man soll das Item auch treffen können)
         if (itemSpawn &&
-                item.getPosition().x >= ball2.getPosition().x-0.5 && item.getPosition().x <= ball2.getPosition().x+0.5 &&
-                item.getPosition().z+0.5 <= ball2.getPosition().z+1 && item.getPosition().z-0.5 >= ball2.getPosition().z-1) {
+                item.getPosition().x >= ball.getPosition().x-0.5 && item.getPosition().x <= ball.getPosition().x+0.5 &&
+                item.getPosition().z+0.5 <= ball.getPosition().z+1 && item.getPosition().z-0.5 >= ball.getPosition().z-1) {
 
             println("item activated!")
             itemSpawn = false
@@ -408,11 +340,11 @@ class Scene(private val window: GameWindow) {
         }
 
         //bei den Wänden interessiert uns nur eine Seite
-        if (ball2.getPosition().z >= (wallDown.getPosition().z)-0.5) {
+        if (ball.getPosition().z >= (wallDown.getPosition().z)-0.5) {
             reverse(wallDown)
         }
 
-        if (ball2.getPosition().z <= (wallUp.getPosition().z)+0.5) {
+        if (ball.getPosition().z <= (wallUp.getPosition().z)+0.5) {
             reverse(wallUp)
         }
     }
@@ -493,7 +425,7 @@ class Scene(private val window: GameWindow) {
             paddleReverseCount++
 
             val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
-            val b_center = (9 + ball2.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
+            val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
 
             speedX *= -1
             speedZ += ((b_center - o_center) * 2).toInt()  // centerBall - centerPaddle; 2 = Konstante zur Erhöhung des Abprallwinkels
@@ -526,24 +458,24 @@ class Scene(private val window: GameWindow) {
         itemSpawn = false
         endEffect()
 
-        ball2.translateLocal(Vector3f(-posX*1.668f, 0.0f, -posZ*1.668f)) //keine Ahnung wieso dieser Faktor..
+        ball.translateLocal(Vector3f(-posX*1.668f, 0.0f, -posZ*1.668f)) //keine Ahnung wieso dieser Faktor..
         rolling = true
     }
 
     private fun winner() {
-        if (ball2.getPosition().x > player2.getPosition().x+2) {
+        if (ball.getPosition().x > player2.getPosition().x+2) {
             player1Score++
             println("SCORE  $player1Score : $player2Score")
-            val posX = ball2.getPosition().x
-            val posZ = ball2.getPosition().z
+            val posX = ball.getPosition().x
+            val posZ = ball.getPosition().z
             resetGame(posX,posZ)
         }
 
-        if (ball2.getPosition().x < player1.getPosition().x-2) {
+        if (ball.getPosition().x < player1.getPosition().x-2) {
             player2Score++
             println("SCORE  $player1Score : $player2Score")
-            val posX = ball2.getPosition().x
-            val posZ = ball2.getPosition().z
+            val posX = ball.getPosition().x
+            val posZ = ball.getPosition().z
             resetGame(posX,posZ)
         }
     }
@@ -629,7 +561,7 @@ class Scene(private val window: GameWindow) {
 
     private fun playerAI(dt: Float, t: Float) {
         val p_center = (8 + playerAI.getPosition().z) + (4/2)
-        val b_center = (9 + ball2.getPosition().z) + (2/2)
+        val b_center = (9 + ball.getPosition().z) + (2/2)
         var move = ((b_center - p_center)*1).toInt()
 
         if (playerAI.getPosition().z+move >= -bounds_player_z && playerAI.getPosition().z+move <= bounds_player_z) {
@@ -647,8 +579,8 @@ class Scene(private val window: GameWindow) {
         }
 
         //AI intersection -> same as player 2
-        if (ball2.getPosition().x >= playerAI.getPosition().x-0.5 && ball2.getPosition().x <= playerAI.getPosition().x+0.5 &&
-                ball2.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball2.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
+        if (ball.getPosition().x >= playerAI.getPosition().x-0.5 && ball.getPosition().x <= playerAI.getPosition().x+0.5 &&
+                ball.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
             reverse(playerAI)
         }
     }
