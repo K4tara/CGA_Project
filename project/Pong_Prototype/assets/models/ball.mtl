@@ -1,8 +1,8 @@
-# Blender MTL File: 'untitled.blend'
-# Material Count: 1
+# Blender MTL File: 'ball.blend'
+# Material Count: 4
 
 newmtl Material.001
-Ns 225.000000
+Ns 223.529412
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
@@ -10,4 +10,41 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd E:\\GitHub\\CGA_Project\\project\\Pong_Prototype\\assets\\textures\\ball.png
+map_Kd E:\GitHub\CGA_Project\project\Pong_Prototype\assets\textures\ball.png
+
+newmtl Material.002
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.115257 0.168868
+Ks 0.438427 0.434839 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\Black85\Desktop\CGA_Models_backup\player\ufo_diffuse2.png
+
+newmtl Material.002_ufo_diffuse.png
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.640000 0.115257 0.168868
+Ks 0.438427 0.434839 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd C:\Users\Black85\Desktop\CGA_Models_backup\player\ufo_diffuse.png
+
+newmtl UFO_texture
+Ns 9.803922
+Ka 0.588200 0.588200 0.588200
+Kd 0.588200 0.168565 0.097989
+Ks 0.603816 0.603816 0.603816
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd C:\Users\Black85\Desktop\CGA_Models_backup\player\ufo_diffuse.png
+map_Bump C:\\Users\\Black85\\Desktop\\CGA_Models_backup\\player\\Map__7_Normal_Bump.tga
+map_Ka C:\\Users\\Black85\\Desktop\\CGA_Models_backup\\player\\ufo_diffuse.png
+map_Ke C:\\Users\\Black85\\Desktop\\CGA_Models_backup\\player\\ufo_diffuse_glow.png
+map_d C:\\Users\\Black85\\Desktop\\CGA_Models_backup\\player\\ufo_diffuse.png

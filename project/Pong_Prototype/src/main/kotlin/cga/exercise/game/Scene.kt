@@ -17,7 +17,6 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.glfw.GLFW.*
 import java.lang.IllegalArgumentException
 import java.lang.Math.abs
-import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -73,7 +72,9 @@ class Scene(private val window: GameWindow) {
     */
 
     //Lighting
-    private var pointLight = Pointlight(Vector3f(),Vector3f())
+    private var pointLight_ball = Pointlight(Vector3f(),Vector3f())
+    private var pointLight_player1 = Pointlight(Vector3f(),Vector3f())
+    private var pointLight_player2 = Pointlight(Vector3f(),Vector3f())
     private var spotLight = Spotlight(Vector3f(),Vector3f())
 
     //Mouse movement, Camera
@@ -134,7 +135,7 @@ class Scene(private val window: GameWindow) {
 
         //Load Models + Assign Textures
         load_models_assign_textures(vertexAttributes, ground,
-            "assets/models/ground.obj",
+            "assets/models/ground2.obj",
             "assets/textures/ground_emit.png",
             "assets/textures/ground_diff.png",
             "assets/textures/ground_spec.png")
@@ -175,9 +176,23 @@ class Scene(private val window: GameWindow) {
             "assets/textures/wall_diff.png",
             "assets/textures/wall_spec.png")
 
-        //Lighting
-        pointLight = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
-        spotLight = Spotlight(Vector3f(0.0f, 1.0f, 30.0f), Vector3f(70.0f))
+        //Setting Lighting
+        pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
+        pointLight_player1 = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
+        pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
+
+        spotLight = Spotlight(Vector3f(0.0f, 30.0f, 60.0f), Vector3f(70.0f))
+
+        pointLight_ball.translateLocal(Vector3f(0.0f,4.0f,0.0f))
+        pointLight_player1.translateLocal(Vector3f(0.0f,4.0f,0.0f))
+        pointLight_player2.translateLocal(Vector3f(0.0f,4.0f,0.0f))
+        spotLight.rotateLocal(Math.toRadians(-45.0f), Math.PI.toFloat(),0.0f)
+
+        pointLight_ball.parent = ball
+        pointLight_player1.parent = player1
+        pointLight_player2.parent = player2
+        //spotLight.parent = ball2
+        //camera.parent = cycle
 
         //Transformations
         player1.scaleLocal(Vector3f(0.8f))
@@ -198,24 +213,21 @@ class Scene(private val window: GameWindow) {
         camera.rotateLocal(Math.toRadians(-90.0f), 0.0f, 0.0f)
         camera.translateLocal(Vector3f(0.0f,0.0f,8.0f))
 
-        pointLight.translateLocal(Vector3f(0.0f,4.0f,0.0f))
-        spotLight.rotateLocal(Math.toRadians(-10.0f), Math.PI.toFloat(),0.0f)
 
-        //Parents
-        pointLight.parent = ball
-        //spotLight.parent = ball2
-        //camera.parent = cycle
 
     }
 
 
     fun update(dt: Float, t: Float) {
 
-        pointLight.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
+        pointLight_ball.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
+        pointLight_player1.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
+        pointLight_player2.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
 
         player_movement(dt)
         ball_movement(dt)
         camera_switch(dt,t)
+
         winner()
         //playerAI(dt,t)
         controlBallspeed()
@@ -255,7 +267,12 @@ class Scene(private val window: GameWindow) {
 
         ball.render(useShader)
 
-        pointLight.bind(useShader,"cyclePoint")
+
+        pointLight_player1.bind(useShader,"cyclePoint")
+        pointLight_player2.bind(useShader,"cyclePoint")
+        pointLight_ball.bind(useShader,"cyclePoint")
+
+
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
     }
 
