@@ -1,21 +1,20 @@
 package cga.exercise.game
 
 import cga.exercise.components.camera.PongCamera
-import cga.exercise.components.geometry.*
+import cga.exercise.components.geometry.Material
+import cga.exercise.components.geometry.Mesh
+import cga.exercise.components.geometry.Renderable
+import cga.exercise.components.geometry.VertexAttribute
 import cga.exercise.components.light.Pointlight
 import cga.exercise.components.light.Spotlight
 import cga.exercise.components.shader.ShaderProgram
 import cga.exercise.components.texture.Texture2D
 import cga.framework.GLError
 import cga.framework.GameWindow
-import cga.framework.ModelLoader
 import cga.framework.OBJLoader
-import org.joml.Vector3f
-import org.joml.Math
-import org.joml.Vector2f
-import org.lwjgl.opengl.GL11.*
+import org.joml.*
 import org.lwjgl.glfw.GLFW.*
-import java.lang.IllegalArgumentException
+import org.lwjgl.opengl.GL11.*
 import java.lang.Math.abs
 import kotlin.math.sin
 import kotlin.random.Random
@@ -31,17 +30,20 @@ class Scene(private val window: GameWindow) {
     //Game variables
     var player1Score = 0
     var player2Score = 0
+    private var swapControls = false
     private var rolling = true
+    private var resetFactor = 1.668f
     private var itemX = 0f
     private var itemZ = 0f
     private var itemBoundsX = 18
     private var itemBoundsZ = 12
-    private var bouncesTillItemSpawn = 5
-    private var paddleReverseCount = 0
     private var itemSpawn = false
     private var placeItem = true
     private var effectNumber = 0
-    private var effectTime = 15f
+    private var effectTime = 0f
+    private var spawnTime = 0f
+    private val EFFECT_TIME = 14.5f
+    private val SPAWN_TIME = 7f
     private var chaos = 0
     private var confuse = 0
     private var shake = 0
@@ -51,22 +53,16 @@ class Scene(private val window: GameWindow) {
     private var ball = Renderable()
     private var player1 = Renderable()
     private var player2 = Renderable()
+    private var playerAI = Renderable()
     private var item = Renderable()
     private var wallUp = Renderable()
     private var wallDown = Renderable()
     private var camera = PongCamera()
 
     /* TODO:
-        3. Angemessene Modelle für Spieler, Ball, Pickups und Hintergrund raussuchen, anpassen und einbinden
+        3. Hintergrund raussuchen, anpassen und einbinden
     */
-    //Models
-   // private var player1 = ModelLoader.loadModel("assets/models/player.obj",Math.toRadians(-90.0f), Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
-    // private var player2 = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
-    private var playerAI = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),Math.toRadians(90.0f),0.0f) ?: throw IllegalArgumentException("loading failed")
-    //private var wallDown = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    //private var wallUp = ModelLoader.loadModel("assets/Light Cycle/HQ_Movie cycle.obj",Math.toRadians(-90.0f),0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    // private var ball = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
-    // private var item = ModelLoader.loadModel("assets/models/sphere.obj",0.0f,0.0f,0.0f) ?: throw IllegalArgumentException("loading failed")
+
     /* TODO:
         4. Anpasssung möglicher weiterer Lichtquellen bspw. mit Fokus auf Ball oder Spieler
     */
@@ -89,29 +85,32 @@ class Scene(private val window: GameWindow) {
     //Player + ball movement parameters
     private var speed_player = 9.0f;
     private var bounds_player_z = 5.5f;
-    private var inBounds1 = false
-    private var inBounds2 = false
-    private var inBounds1_1 = false
-    private var inBounds2_1 = false
+    private var inBounds1ZUp = false
+    private var inBounds2ZUp = false
+    private var inBounds1ZDown = false
+    private var inBounds2ZDown = false
     private var keyW = false
     private var keyS = false
     private var keyUp = false
     private var keyDown = false
     private var speedZ = 0
-    private var speedX = -20
-    private var maxSpeedZ = 11
-    private var maxSpeedX = 10
+    private var speedX = 0
+    private var START_SPEEDX = 14
+    private var maxSpeedZ = 20
+    private var maxSpeedX = 22
     private var speed_ai_player = 0f
     private var max_speed_ai_player = 7f
 
     //Scene setup
     init {
-
         classicStaticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
         staticCelShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/effect_frag.glsl") //Toon effect (Cel shading)
         effectShader = ShaderProgram("assets/shaders/effect3_vert.glsl", "assets/shaders/effect3_frag.glsl") //all effects in one shader
 
         useShader = classicStaticShader
+        effectTime = EFFECT_TIME
+        spawnTime = SPAWN_TIME
+        speedX = -START_SPEEDX
 
         //initial opengl state
         glClearColor(0f, 0f, 0f, 1.0f); GLError.checkThrow()
@@ -121,12 +120,7 @@ class Scene(private val window: GameWindow) {
         glEnable(GL_DEPTH_TEST); GLError.checkThrow()
         glDepthFunc(GL_LESS); GLError.checkThrow()
 
-        //Attributes
-        //val textstride: Int = 8 * 4
-        //val textattrPos = VertexAttribute(0,2, GL_FLOAT, false, textstride, 0)
-        //val textattrTC = VertexAttribute(1,2, GL_FLOAT, false, textstride, 2 * 4)
-        //val textvertexAttributes = arrayOf(textattrPos, textattrTC)
-
+        //Atrributes
         val stride: Int = 8 * 4
         val attrPos = VertexAttribute(0,3, GL_FLOAT, false, stride, 0)
         val attrTC = VertexAttribute(1,2, GL_FLOAT, false, stride, 3 * 4)
@@ -158,6 +152,12 @@ class Scene(private val window: GameWindow) {
             "assets/textures/player2_diff.png",
             "assets/textures/player2_spec.png")
 
+        load_models_assign_textures(vertexAttributes, playerAI,
+                "assets/models/player.obj",
+                "assets/textures/player2_emit.png",
+                "assets/textures/player2_diff.png",
+                "assets/textures/player2_spec.png")
+
         load_models_assign_textures(vertexAttributes, item,
             "assets/models/item.obj",
             "assets/textures/item_emit.png",
@@ -186,7 +186,7 @@ class Scene(private val window: GameWindow) {
         pointLight_ball.translateLocal(Vector3f(0.0f,4.0f,0.0f))
         pointLight_player1.translateLocal(Vector3f(0.0f,4.0f,0.0f))
         pointLight_player2.translateLocal(Vector3f(0.0f,4.0f,0.0f))
-        spotLight.rotateLocal(Math.toRadians(-45.0f), Math.PI.toFloat(),0.0f)
+        spotLight.rotateLocal(Math.toRadians(-10.0f), Math.PI.toFloat(),0.0f) //rotateLocal(Math.toRadians(-45.0f), Math.PI.toFloat(),0.0f)
 
         pointLight_ball.parent = ball
         pointLight_player1.parent = player1
@@ -209,12 +209,10 @@ class Scene(private val window: GameWindow) {
         wallDown.scaleLocal(Vector3f(7f,1f,1f))
         wallUp.scaleLocal(Vector3f(7f,1f,1f))
         item.scaleLocal(Vector3f(0.4f))
+        item.translateLocal(Vector3f(0.0f, 1.0f, 0.0f))
 
         camera.rotateLocal(Math.toRadians(-90.0f), 0.0f, 0.0f)
         camera.translateLocal(Vector3f(0.0f,0.0f,8.0f))
-
-
-
     }
 
 
@@ -232,25 +230,25 @@ class Scene(private val window: GameWindow) {
         //playerAI(dt,t)
         controlBallspeed()
 
-        if (itemSpawn && placeItem) {
-            placeItem()
-        }
-
-        //end effects
+        //end effects after some time
         if (effectNumber > 0) {
             countDownEffect(dt)
+        }
+
+        //place item if there´s no effect and if new item should be placed
+        if (effectNumber == 0 && placeItem) {
+            countDownSpawn(dt)
         }
     }
 
     fun render(dt: Float, t: Float) {
-
         glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
         useShader.use()
         useShader.setUniform("sceneColour", Vector3f(1.0f,1.0f,1.0f))
         useShader.setUniform("time",t)
         useShader.setUniform("chaos", chaos) //LSD effect
-        useShader.setUniform("confuse", confuse) //inverted colors & TODO: player movement
+        useShader.setUniform("confuse", confuse) //inverted colors & player movement
         useShader.setUniform("shake", shake) //earthquake + light switching
 
         camera.bind(useShader)
@@ -260,19 +258,15 @@ class Scene(private val window: GameWindow) {
         player1.render(useShader)
         player2.render(useShader)
 
-        if (paddleReverseCount >= bouncesTillItemSpawn) {
-            itemSpawn = true
+        if (itemSpawn) {
             item.render(useShader)
         }
 
         ball.render(useShader)
 
-
         pointLight_player1.bind(useShader,"cyclePoint")
         pointLight_player2.bind(useShader,"cyclePoint")
         pointLight_ball.bind(useShader,"cyclePoint")
-
-
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
     }
 
@@ -298,30 +292,36 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun player_movement(dt: Float) {
-        inBounds1 = player1.getPosition().z >= -bounds_player_z
-        inBounds1_1 = player1.getPosition().z <= bounds_player_z
-        inBounds2 = player2.getPosition().z >= -bounds_player_z
-        inBounds2_1 = player2.getPosition().z <= bounds_player_z
+        inBounds1ZUp = player1.getPosition().z >= -bounds_player_z
+        inBounds1ZDown = player1.getPosition().z <= bounds_player_z
+        inBounds2ZUp = player2.getPosition().z >= -bounds_player_z
+        inBounds2ZDown = player2.getPosition().z <= bounds_player_z
 
-        keyW = window.getKeyState(GLFW_KEY_W)
-        keyS = window.getKeyState(GLFW_KEY_S)
-        keyUp = window.getKeyState(GLFW_KEY_UP)
-        keyDown = window.getKeyState(GLFW_KEY_DOWN)
+        if (swapControls) {
+            keyS = window.getKeyState(GLFW_KEY_W)
+            keyW = window.getKeyState(GLFW_KEY_S)
+            keyDown = window.getKeyState(GLFW_KEY_UP)
+            keyUp = window.getKeyState(GLFW_KEY_DOWN)
+        } else {
+            keyW = window.getKeyState(GLFW_KEY_W)
+            keyS = window.getKeyState(GLFW_KEY_S)
+            keyUp = window.getKeyState(GLFW_KEY_UP)
+            keyDown = window.getKeyState(GLFW_KEY_DOWN)
+        }
 
-
-        if (keyW && inBounds1) { //player1.getPosition().z >= -bounds_player_z) {
+        if (keyW && inBounds1ZUp) { // player1.getPosition().z >= -bounds_player_z) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, -speed_player * dt))
         }
 
-        if (keyS && inBounds1_1) { //player1.getPosition().z <= bounds_player_z) {
+        if (keyS && inBounds1ZDown) { // player1.getPosition().z <= bounds_player_z) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
         }
 
-        if (keyUp && inBounds2) { //player2.getPosition().z >= -bounds_player_z) {
+        if (keyUp && inBounds2ZUp) { // player2.getPosition().z >= -bounds_player_z) {
             player2.translateLocal(Vector3f(0.0f, 0.0f, -speed_player  * dt))
         }
 
-        if (keyDown && inBounds2_1) { //player2.getPosition().z <= bounds_player_z) {
+        if (keyDown && inBounds2ZDown) { // player2.getPosition().z <= bounds_player_z) {
             player2.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
         }
     }
@@ -351,7 +351,6 @@ class Scene(private val window: GameWindow) {
 
             println("item activated!")
             itemSpawn = false
-            paddleReverseCount = -3
             placeItem = true
             effect()
         }
@@ -439,7 +438,6 @@ class Scene(private val window: GameWindow) {
             speedZ *= -1
         } else {
             println("PADDLE_REVERSE")
-            paddleReverseCount++
 
             val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
             val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
@@ -471,11 +469,12 @@ class Scene(private val window: GameWindow) {
         rolling = false
         speedZ = 0
         speedX *= -1
-        paddleReverseCount = 0
         itemSpawn = false
+        placeItem = true
+        spawnTime = SPAWN_TIME
         endEffect()
 
-        ball.translateLocal(Vector3f(-posX*1.668f, 0.0f, -posZ*1.668f)) //keine Ahnung wieso dieser Faktor..
+        ball.translateLocal(Vector3f(-posX * resetFactor, 0.0f, -posZ * resetFactor))
         rolling = true
     }
 
@@ -506,6 +505,7 @@ class Scene(private val window: GameWindow) {
                 item.getPosition().x+itemX >= -11 && item.getPosition().x+itemX <= 11) {
 
             item.translateLocal(Vector3f(itemX, 0.0f, itemZ))
+            itemSpawn = true
             placeItem = false
             println("new item has appeared!")
             println("Item Position X: ${item.getPosition().x}, Z: ${item.getPosition().z}")
@@ -523,7 +523,7 @@ class Scene(private val window: GameWindow) {
             2 -> {
                 useShader = effectShader
                 confuse = 1
-                //speed_player *= -1
+                swapControls = true
             }
             3 -> {
                 useShader = effectShader
@@ -544,7 +544,7 @@ class Scene(private val window: GameWindow) {
             2 -> {
                 useShader = classicStaticShader
                 confuse = 0
-                //speed_player *= -1
+                swapControls = false
             }
             3 -> {
                 useShader = classicStaticShader
@@ -568,9 +568,9 @@ class Scene(private val window: GameWindow) {
 
     private fun slowDown() {
         if (speedX > 0) {
-            speedX = 6
+            speedX = START_SPEEDX
         } else {
-            speedX = -6
+            speedX = -START_SPEEDX
         }
 
         speedZ / 1.4
@@ -608,7 +608,18 @@ class Scene(private val window: GameWindow) {
 
             if (effectTime <= 0f){
                 endEffect()
-                effectTime = 15f
+                effectTime = EFFECT_TIME
+            }
+        }
+    }
+
+    private fun countDownSpawn(dt: Float) {
+        if (spawnTime > 0f) {
+            spawnTime -= dt
+
+            if (spawnTime <= 0f){
+                placeItem()
+                spawnTime = SPAWN_TIME
             }
         }
     }
