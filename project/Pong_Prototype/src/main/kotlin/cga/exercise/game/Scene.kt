@@ -8,6 +8,7 @@ import cga.exercise.components.geometry.VertexAttribute
 import cga.exercise.components.light.Pointlight
 import cga.exercise.components.light.Spotlight
 import cga.exercise.components.shader.ShaderProgram
+import cga.exercise.components.texture.Skybox
 import cga.exercise.components.texture.Texture2D
 import cga.framework.GLError
 import cga.framework.GameWindow
@@ -26,6 +27,9 @@ class Scene(private val window: GameWindow) {
     private val staticCelShader: ShaderProgram
     private val effectShader: ShaderProgram
     private var useShader: ShaderProgram
+    private val skyboxShader: ShaderProgram
+
+    private val skybox: Skybox
 
     //Game variables
     var player1Score = 0
@@ -106,11 +110,25 @@ class Scene(private val window: GameWindow) {
         classicStaticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
         staticCelShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/effect_frag.glsl") //Toon effect (Cel shading)
         effectShader = ShaderProgram("assets/shaders/effect3_vert.glsl", "assets/shaders/effect3_frag.glsl") //all effects in one shader
+        skyboxShader = ShaderProgram("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
 
         useShader = classicStaticShader
         effectTime = EFFECT_TIME
         spawnTime = SPAWN_TIME
         speedX = -START_SPEEDX
+
+        skybox = Skybox()
+        val skyboxFaces = listOf(
+                "assets/textures/Skybox/right.jpg",
+                "assets/textures/Skybox/left.jpg",
+                "assets/textures/Skybox/top.jpg",
+                "assets/textures/Skybox/bottom.jpg",
+                "assets/textures/Skybox/front.jpg",
+                "assets/textures/Skybox/back.jpg"
+        )
+        skybox.setupVaoVbo()
+        skybox.loadCubemap(skyboxFaces)
+
 
         //initial opengl state
         glClearColor(0f, 0f, 0f, 1.0f); GLError.checkThrow()
@@ -268,6 +286,8 @@ class Scene(private val window: GameWindow) {
         pointLight_player2.bind(useShader,"cyclePoint")
         pointLight_ball.bind(useShader,"cyclePoint")
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
+
+        skybox.render(skyboxShader, camera)
     }
 
     fun load_models_assign_textures (vertexAttributes : Array<VertexAttribute>, renderable: Renderable, modelPath: String,
