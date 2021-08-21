@@ -16,7 +16,12 @@ import cga.framework.OBJLoader
 import org.joml.*
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL11.*
+import java.io.File
 import java.lang.Math.abs
+import javax.sound.sampled.AudioInputStream
+import javax.sound.sampled.AudioSystem
+import javax.sound.sampled.Clip
+
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -54,6 +59,11 @@ class Scene(private val window: GameWindow) {
 
     //Objects + Camera
     private var ground = Renderable()
+    private var text = Renderable()
+    private var text_score = Renderable()
+    private var score_bar = Renderable()
+    private var score_p1 = Renderable()
+    private var score_p2 = Renderable()
     private var ball = Renderable()
     private var player1 = Renderable()
     private var player2 = Renderable()
@@ -97,6 +107,7 @@ class Scene(private val window: GameWindow) {
     private var keyS = false
     private var keyUp = false
     private var keyDown = false
+    private var pause = true
     private var speedZ = 0
     private var speedX = 0
     private var START_SPEEDX = 14
@@ -104,6 +115,11 @@ class Scene(private val window: GameWindow) {
     private var maxSpeedX = 22
     private var speed_ai_player = 0f
     private var max_speed_ai_player = 7f
+
+    private var sound_1 : Clip
+    private var sound_2 : Clip
+    var audioInputStream2 : AudioInputStream = AudioSystem.getAudioInputStream(File("assets/sounds/pong.wav"))
+
 
     //Scene setup
     init {
@@ -129,6 +145,16 @@ class Scene(private val window: GameWindow) {
         skybox.setupVaoVbo()
         skybox.loadCubemap(skyboxFaces)
 
+        //Set Background Sound
+        var audioInputStream : AudioInputStream = AudioSystem.getAudioInputStream(File("assets/sounds/pong_atmo.wav"))
+
+        sound_1 = AudioSystem.getClip()
+        sound_1.open(audioInputStream)
+        sound_1.start()
+        sound_1.loop(Clip.LOOP_CONTINUOUSLY)
+
+        sound_2 = AudioSystem.getClip()
+        sound_2.open(audioInputStream2)
 
         //initial opengl state
         glClearColor(0f, 0f, 0f, 1.0f); GLError.checkThrow()
@@ -182,6 +208,37 @@ class Scene(private val window: GameWindow) {
             "assets/textures/item_diff.png",
             "assets/textures/item_spec.png")
 
+        load_models_assign_textures(vertexAttributes, text,
+            "assets/models/text.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
+
+        load_models_assign_textures(vertexAttributes, text_score,
+            "assets/models/score_text.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
+
+        load_models_assign_textures(vertexAttributes, score_p1,
+            "assets/models/score_p1.obj",
+            "assets/textures/ground_emit.png",
+            "assets/textures/ground_diff.png",
+            "assets/textures/ground_spec.png")
+
+        load_models_assign_textures(vertexAttributes, score_p2,
+            "assets/models/score_p2.obj",
+            "assets/textures/ground_emit.png",
+            "assets/textures/ground_diff.png",
+            "assets/textures/ground_spec.png")
+
+        load_models_assign_textures(vertexAttributes, score_bar,
+            "assets/models/score_bar.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
+
+
         load_models_assign_textures(vertexAttributes, wallUp,
             "assets/models/wall.obj",
             "assets/textures/wall_emit.png",
@@ -193,6 +250,8 @@ class Scene(private val window: GameWindow) {
             "assets/textures/wall_emit.png",
             "assets/textures/wall_diff.png",
             "assets/textures/wall_spec.png")
+
+
 
         //Setting Lighting
         pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
@@ -240,13 +299,21 @@ class Scene(private val window: GameWindow) {
         pointLight_player1.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
         pointLight_player2.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
 
+        start_game(dt)
+
         player_movement(dt)
-        ball_movement(dt)
+
+        if (!pause) ball_movement(dt)
+
         camera_switch(dt,t)
 
         winner()
         //playerAI(dt,t)
+        //playerAI(dt,t)
         controlBallspeed()
+
+
+        item.rotateLocal(Math.toRadians(0.0f), 0.01f, -0.0f)
 
         //end effects after some time
         if (effectNumber > 0) {
@@ -271,10 +338,16 @@ class Scene(private val window: GameWindow) {
 
         camera.bind(useShader)
         ground.render(useShader)
+        text.render(useShader)
+        text_score.render(useShader)
+        score_bar.render(useShader)
+        score_p1.render(useShader)
+        score_p2.render(useShader)
         wallDown.render(useShader)
         wallUp.render(useShader)
         player1.render(useShader)
         player2.render(useShader)
+
 
         if (itemSpawn) {
             item.render(useShader)
@@ -301,17 +374,26 @@ class Scene(private val window: GameWindow) {
         val texture_diff = Texture2D(texture_diff_path,true)
         val texture_spec = Texture2D(texture_spec_path,true)
 
-        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
         texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
-        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_NEAREST,GL_NEAREST)
 
         val material = Material(texture_diff, texture_emit, texture_spec,10.0f, Vector2f(64.0f,64.0f))
 
         mesh = Mesh(obj_mesh.vertexData, obj_mesh.indexData, vertexAttributes, material)
         renderable.list.add(mesh)
     }
+    private fun start_game(dt: Float) {
+
+        if (window.getKeyState(GLFW_KEY_ENTER) && pause == true) {
+            text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
+            pause = false
+            text_score.translateLocal(Vector3f(0.0f, 0.01f, 0.0f))
+        }
+    }
 
     private fun player_movement(dt: Float) {
+
         inBounds1ZUp = player1.getPosition().z >= -bounds_player_z
         inBounds1ZDown = player1.getPosition().z <= bounds_player_z
         inBounds2ZUp = player2.getPosition().z >= -bounds_player_z
@@ -459,6 +541,8 @@ class Scene(private val window: GameWindow) {
         } else {
             println("PADDLE_REVERSE")
 
+            sound_2.start()
+
             val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
             val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
 
@@ -501,6 +585,14 @@ class Scene(private val window: GameWindow) {
     private fun winner() {
         if (ball.getPosition().x > player2.getPosition().x+2) {
             player1Score++
+
+            if(player1Score==1) score_p2.translateLocal(Vector3f(-0.2f, 0.0f,0.0f))
+            if(player1Score==2) score_p2.translateLocal(Vector3f(-0.4f, 0.0f,0.0f))
+            if(player1Score==3) score_p2.translateLocal(Vector3f(-0.6f, 0.0f,0.0f))
+            if(player1Score==4) score_p2.translateLocal(Vector3f(-0.8f, 0.0f,0.0f))
+            if(player1Score==5) { score_p2.translateLocal(Vector3f(-0.9f, 0.0f,0.0f))
+                                  pause = true}
+
             println("SCORE  $player1Score : $player2Score")
             val posX = ball.getPosition().x
             val posZ = ball.getPosition().z
@@ -509,6 +601,14 @@ class Scene(private val window: GameWindow) {
 
         if (ball.getPosition().x < player1.getPosition().x-2) {
             player2Score++
+
+            if(player2Score==1) score_p1.translateLocal(Vector3f(-0.2f, 0.0f,0.0f))
+            if(player2Score==2) score_p1.translateLocal(Vector3f(-0.4f, 0.0f,0.0f))
+            if(player2Score==3) score_p1.translateLocal(Vector3f(-0.6f, 0.0f,0.0f))
+            if(player2Score==4) score_p1.translateLocal(Vector3f(-0.8f, 0.0f,0.0f))
+            if(player2Score==5) { score_p1.translateLocal(Vector3f(-0.9f, 0.0f,0.0f))
+                              pause = true}
+
             println("SCORE  $player1Score : $player2Score")
             val posX = ball.getPosition().x
             val posZ = ball.getPosition().z

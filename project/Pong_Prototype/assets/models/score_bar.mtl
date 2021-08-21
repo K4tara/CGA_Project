@@ -1,0 +1,12 @@
+# Blender MTL File: 'ground.blend'
+# Material Count: 1
+
+newmtl Material.006
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.200222 0.640000 0.082307
+Ks 0.111901 0.500000 0.106467
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 2
