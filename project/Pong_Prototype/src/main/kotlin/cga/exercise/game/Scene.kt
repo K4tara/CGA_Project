@@ -420,6 +420,7 @@ class Scene(private val window: GameWindow) {
 
             pause = false
             text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
+            resetGame(ball.getPosition().x, ball.getPosition().z)
 
             if(player1Score==1){
                 score_p2.translateLocal(Vector3f(0.2f, 0.0f,0.0f))
