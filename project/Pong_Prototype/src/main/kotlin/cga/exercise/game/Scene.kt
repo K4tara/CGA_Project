@@ -375,7 +375,7 @@ class Scene(private val window: GameWindow) {
         pointLight_ball.bind(useShader,"cyclePoint")
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
 
-        skybox.render(skyboxShader, camera)
+        if (effectNumber !in 1..3) skybox.render(skyboxShader, camera)
     }
 
     fun load_models_assign_textures (vertexAttributes : Array<VertexAttribute>, renderable: Renderable, modelPath: String,
@@ -684,7 +684,7 @@ class Scene(private val window: GameWindow) {
         } else {
             println("PADDLE_REVERSE")
 
-            sound_2.start()
+            //sound_2.start()
 
             val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
             val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
@@ -778,7 +778,7 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun effect() {
-        val effect = Random.nextInt(1,5) //1 bis 4
+        val effect = 2//Random.nextInt(1,5) //1 bis 4
 
         when (effect) {
             1 -> {
@@ -789,6 +789,7 @@ class Scene(private val window: GameWindow) {
                 useShader = effectShader
                 confuse = 1
                 swapControls = true
+                colorSwap()
             }
             3 -> {
                 useShader = effectShader
@@ -810,6 +811,7 @@ class Scene(private val window: GameWindow) {
                 useShader = classicStaticShader
                 confuse = 0
                 swapControls = false
+                colorSwap()
             }
             3 -> {
                 useShader = classicStaticShader
@@ -819,6 +821,32 @@ class Scene(private val window: GameWindow) {
         }
 
         effectNumber = 0
+    }
+
+    private fun colorSwap() {
+        val texture = Texture2D("assets/textures/wall.png",true)
+        texture.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
+        val materialBrown = Material(texture, texture, texture)
+
+        val texture2 = Texture2D("assets/textures/white.png",true)
+        texture2.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
+        val materialWhite = Material(texture2, texture2, texture2)
+
+        when (confuse) {
+            1 -> {
+                text_score.list.first().material = materialBrown
+                score_bar.list.first().material = materialBrown
+                score_p1.list.first().material = materialWhite
+                score_p2.list.first().material = materialWhite
+            }
+
+            0 -> {
+                text_score.list.first().material = materialWhite
+                score_bar.list.first().material = materialWhite
+                score_p1.list.first().material = materialBrown
+                score_p2.list.first().material = materialBrown
+            }
+        }
     }
 
     private fun speedUp() {
@@ -884,7 +912,7 @@ class Scene(private val window: GameWindow) {
 
         if (window.getKeyState(GLFW_KEY_F4)) {
             sound_1.stop()
-            //sound_2.stop()
+            sound_2.stop()
         }
     }
 
