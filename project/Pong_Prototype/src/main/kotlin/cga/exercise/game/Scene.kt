@@ -29,7 +29,7 @@ class Scene(private val window: GameWindow) {
 
     //Shaders
     private val classicStaticShader: ShaderProgram
-    private val staticCelShader: ShaderProgram
+    //private val staticCelShader: ShaderProgram
     private val effectShader: ShaderProgram
     private var useShader: ShaderProgram
     private val skyboxShader: ShaderProgram
@@ -127,7 +127,7 @@ class Scene(private val window: GameWindow) {
     //Scene setup
     init {
         classicStaticShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/tron_frag.glsl")
-        staticCelShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/effect_frag.glsl") //Toon effect (Cel shading)
+        //staticCelShader = ShaderProgram("assets/shaders/tron_vert.glsl", "assets/shaders/effect_frag.glsl") //Toon effect (Cel shading)
         effectShader = ShaderProgram("assets/shaders/effect3_vert.glsl", "assets/shaders/effect3_frag.glsl") //all effects in one shader
         skyboxShader = ShaderProgram("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
 
@@ -269,16 +269,16 @@ class Scene(private val window: GameWindow) {
 
 
         //Setting Lighting
-        pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
-        pointLight_player1 = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
-        pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,0f))
+        pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,1f))
+        pointLight_player1 = Pointlight(camera.getWorldPosition(), Vector3f(1f,0f,0f), Vector3f(1.0f,0.4f,0.1f))
+        pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(0f,1f,0f), Vector3f(1.0f,0.4f,0.1f))
 
         spotLight = Spotlight(Vector3f(0.0f, 30.0f, 60.0f), Vector3f(70.0f))
 
         pointLight_ball.translateLocal(Vector3f(0.0f,4.0f,0.0f))
         pointLight_player1.translateLocal(Vector3f(0.0f,4.0f,0.0f))
         pointLight_player2.translateLocal(Vector3f(0.0f,4.0f,0.0f))
-        spotLight.rotateLocal(Math.toRadians(-10.0f), Math.PI.toFloat(),0.0f) //rotateLocal(Math.toRadians(-45.0f), Math.PI.toFloat(),0.0f)
+        spotLight.rotateLocal(Math.toRadians(-10.0f), Math.PI.toFloat(),0.0f) //rotateLocal(Math.toRadians(-45.0f), Math.PI.toFloat(),0.0f)   -10
 
         pointLight_ball.parent = ball
         pointLight_player1.parent = player1
@@ -312,10 +312,6 @@ class Scene(private val window: GameWindow) {
 
 
     fun update(dt: Float, t: Float) {
-
-        pointLight_ball.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
-        pointLight_player1.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
-        pointLight_player2.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
 
         start_game(dt)
         restart_game(dt)
@@ -380,8 +376,8 @@ class Scene(private val window: GameWindow) {
 
         ball.render(useShader)
 
-        pointLight_player1.bind(useShader,"cyclePoint")
-        pointLight_player2.bind(useShader,"cyclePoint")
+        pointLight_player1.bind(useShader,"cyclePoint2")
+        pointLight_player2.bind(useShader,"cyclePoint3")
         pointLight_ball.bind(useShader,"cyclePoint")
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
 
