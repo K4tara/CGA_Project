@@ -76,14 +76,6 @@ class Scene(private val window: GameWindow) {
     private var wallDown = Renderable()
     private var camera = PongCamera()
 
-    /* TODO:
-        3. Hintergrund raussuchen, anpassen und einbinden
-    */
-
-    /* TODO:
-        4. Anpasssung möglicher weiterer Lichtquellen bspw. mit Fokus auf Ball oder Spieler
-    */
-
     //Lighting
     private var pointLight_ball = Pointlight(Vector3f(),Vector3f())
     private var pointLight_player1 = Pointlight(Vector3f(),Vector3f())
@@ -138,12 +130,12 @@ class Scene(private val window: GameWindow) {
 
         skybox = Skybox()
         val skyboxFaces = listOf(
-                "assets/textures/Skybox/right.jpg",
-                "assets/textures/Skybox/left.jpg",
-                "assets/textures/Skybox/top.jpg",
-                "assets/textures/Skybox/bottom.jpg",
-                "assets/textures/Skybox/front.jpg",
-                "assets/textures/Skybox/back.jpg"
+                "assets/textures/Skybox/backup/posx.jpg",
+                "assets/textures/Skybox/backup/negx.jpg",
+                "assets/textures/Skybox/backup/posy.jpg",
+                "assets/textures/Skybox/backup/negy.jpg",
+                "assets/textures/Skybox/backup/posz.jpg",
+                "assets/textures/Skybox/backup/negz.jpg"
         )
         skybox.setupVaoVbo()
         skybox.loadCubemap(skyboxFaces)
@@ -213,27 +205,27 @@ class Scene(private val window: GameWindow) {
 
         load_models_assign_textures(vertexAttributes, text,
             "assets/models/text.obj",
-            "assets/textures/item_emit.png",
-            "assets/textures/item_diff.png",
-            "assets/textures/item_spec.png")
+            "assets/textures/white.png",
+            "assets/textures/white.png",
+            "assets/textures/white.png")
 
         load_models_assign_textures(vertexAttributes, text_score,
             "assets/models/score_text.obj",
-            "assets/textures/item_emit.png",
-            "assets/textures/item_diff.png",
-            "assets/textures/item_spec.png")
+            "assets/textures/white.png",
+            "assets/textures/white.png",
+            "assets/textures/white.png")
 
         load_models_assign_textures(vertexAttributes, text_p1_won,
             "assets/models/text_p1_won.obj",
-            "assets/textures/item_emit.png",
-            "assets/textures/item_diff.png",
-            "assets/textures/item_spec.png")
+            "assets/textures/white.png",
+            "assets/textures/white.png",
+            "assets/textures/white.png")
 
         load_models_assign_textures(vertexAttributes, text_p2_won,
             "assets/models/text_p2_won.obj",
-            "assets/textures/item_emit.png",
-            "assets/textures/item_diff.png",
-            "assets/textures/item_spec.png")
+            "assets/textures/white.png",
+            "assets/textures/white.png",
+            "assets/textures/white.png")
 
         load_models_assign_textures(vertexAttributes, score_p1,
             "assets/models/score_p1.obj",
@@ -249,9 +241,9 @@ class Scene(private val window: GameWindow) {
 
         load_models_assign_textures(vertexAttributes, score_bar,
             "assets/models/score_bar.obj",
-            "assets/textures/item_emit.png",
-            "assets/textures/item_diff.png",
-            "assets/textures/item_spec.png")
+            "assets/textures/white.png",
+            "assets/textures/white.png",
+            "assets/textures/white.png")
 
 
         load_models_assign_textures(vertexAttributes, wallUp,
@@ -315,11 +307,13 @@ class Scene(private val window: GameWindow) {
 
         start_game(dt)
         restart_game(dt)
-        player_movement(dt)
 
-        if (!pause) ball_movement(dt)
+        if (!pause) {
+            ball_movement(dt)
+            player_movement(dt)
+            camera_switch(dt,t)
+        }
 
-        camera_switch(dt,t)
         changeMode()
         controlBallspeed()
         winner()
@@ -577,6 +571,16 @@ class Scene(private val window: GameWindow) {
             if (view2 && view1 == false) {
                 camera.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,-4.0f,-3.0f))
+
+                text_score.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_bar.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p1.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p2.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                text_score.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_bar.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p1.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p2.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+
                 viewActive = 1
                 view1 = true
                 view2 = false
@@ -586,6 +590,20 @@ class Scene(private val window: GameWindow) {
                 camera.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
                 camera.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,-2.0f,-5.0f))
+
+                text_score.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
+                text_score.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                text_score.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_bar.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
+                score_bar.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_bar.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p1.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
+                score_p1.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p1.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p2.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
+                score_p2.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p2.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+
                 viewActive = 1
                 view1 = true
                 view3 = false
@@ -597,6 +615,16 @@ class Scene(private val window: GameWindow) {
             if (view2 == false) {
                 camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,4.0f,3.0f))
+
+                text_score.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_bar.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p1.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p2.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                text_score.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_bar.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p1.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p2.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+
                 viewActive = 2
                 view2 = true
                 view1 = false
@@ -609,6 +637,20 @@ class Scene(private val window: GameWindow) {
                 camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,2.0f,5.0f))
+
+                text_score.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                text_score.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
+                text_score.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_bar.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_bar.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
+                score_bar.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p1.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p1.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
+                score_p1.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p2.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
+                score_p2.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
+                score_p2.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+
                 viewActive = 3
                 view3 = true
                 view1 = false
