@@ -62,6 +62,8 @@ class Scene(private val window: GameWindow) {
     private var ground = Renderable()
     private var text = Renderable()
     private var text_score = Renderable()
+    private var text_p1_won = Renderable()
+    private var text_p2_won = Renderable()
     private var score_bar = Renderable()
     private var score_p1 = Renderable()
     private var score_p2 = Renderable()
@@ -221,6 +223,18 @@ class Scene(private val window: GameWindow) {
             "assets/textures/item_diff.png",
             "assets/textures/item_spec.png")
 
+        load_models_assign_textures(vertexAttributes, text_p1_won,
+            "assets/models/text_p1_won.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
+
+        load_models_assign_textures(vertexAttributes, text_p2_won,
+            "assets/models/text_p2_won.obj",
+            "assets/textures/item_emit.png",
+            "assets/textures/item_diff.png",
+            "assets/textures/item_spec.png")
+
         load_models_assign_textures(vertexAttributes, score_p1,
             "assets/models/score_p1.obj",
             "assets/textures/ground_emit.png",
@@ -289,6 +303,9 @@ class Scene(private val window: GameWindow) {
         item.scaleLocal(Vector3f(0.4f))
         item.translateLocal(Vector3f(0.0f, 1.0f, 0.0f))
 
+        text_p1_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
+        text_p2_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
+
         camera.rotateLocal(Math.toRadians(-90.0f), 0.0f, 0.0f)
         camera.translateLocal(Vector3f(0.0f,0.0f,8.0f))
     }
@@ -301,6 +318,7 @@ class Scene(private val window: GameWindow) {
         pointLight_player2.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
 
         start_game(dt)
+        restart_game(dt)
         player_movement(dt)
 
         if (!pause) ball_movement(dt)
@@ -341,6 +359,8 @@ class Scene(private val window: GameWindow) {
         ground.render(useShader)
         text.render(useShader)
         text_score.render(useShader)
+        text_p1_won.render(useShader)
+        text_p2_won.render(useShader)
         score_bar.render(useShader)
         score_p1.render(useShader)
         score_p2.render(useShader)
@@ -395,6 +415,80 @@ class Scene(private val window: GameWindow) {
             text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
             pause = false
             text_score.translateLocal(Vector3f(0.0f, 0.01f, 0.0f))
+        }
+    }
+
+    private fun restart_game(dt: Float){
+
+        if(window.getKeyState(GLFW_KEY_R)){
+
+            pause = false
+            text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
+
+            if(player1Score==1){
+                score_p2.translateLocal(Vector3f(0.2f, 0.0f,0.0f))
+                player1Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player1Score==2){
+                score_p2.translateLocal(Vector3f(0.6f, 0.0f,0.0f))
+                player1Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player1Score==3){
+                score_p2.translateLocal(Vector3f(1.2f, 0.0f,0.0f))
+                player1Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player1Score==4){
+                score_p2.translateLocal(Vector3f(2.0f, 0.0f,0.0f))
+                player1Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player1Score==5){
+                score_p2.translateLocal(Vector3f(2.9f, 0.0f,0.0f))
+                text_p1_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
+                player1Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+
+            if(player2Score==1){
+                score_p1.translateLocal(Vector3f(0.2f, 0.0f,0.0f))
+                player2Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player2Score==2){
+                score_p1.translateLocal(Vector3f(0.6f, 0.0f,0.0f))
+                player2Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player2Score==3){
+                score_p1.translateLocal(Vector3f(1.2f, 0.0f,0.0f))
+                player2Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player2Score==4){
+                score_p1.translateLocal(Vector3f(2.0f, 0.0f,0.0f))
+                player2Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+            if(player2Score==5){
+                score_p1.translateLocal(Vector3f(2.9f, 0.0f,0.0f))
+                text_p2_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
+                player2Score = 0
+                println("RESTART")
+                println("SCORE  $player1Score : $player2Score")
+            }
+
         }
     }
 
@@ -601,6 +695,7 @@ class Scene(private val window: GameWindow) {
             if(player1Score==3) score_p2.translateLocal(Vector3f(-0.6f, 0.0f,0.0f))
             if(player1Score==4) score_p2.translateLocal(Vector3f(-0.8f, 0.0f,0.0f))
             if(player1Score==5) { score_p2.translateLocal(Vector3f(-0.9f, 0.0f,0.0f))
+                                  text_p1_won.translateLocal(Vector3f(0.0f, 2f, 0.0f))
                                   pause = true}
 
             println("SCORE  $player1Score : $player2Score")
@@ -617,6 +712,7 @@ class Scene(private val window: GameWindow) {
             if(player2Score==3) score_p1.translateLocal(Vector3f(-0.6f, 0.0f,0.0f))
             if(player2Score==4) score_p1.translateLocal(Vector3f(-0.8f, 0.0f,0.0f))
             if(player2Score==5) { score_p1.translateLocal(Vector3f(-0.9f, 0.0f,0.0f))
+                                text_p2_won.translateLocal(Vector3f(0.0f, 2f, 0.0f))
                               pause = true}
 
             println("SCORE  $player1Score : $player2Score")

@@ -1,7 +1,7 @@
 package cga.exercise.components.texture
 
 import cga.exercise.components.camera.PongCamera
-import cga.exercise.components.camera.SwitchCamera
+//import cga.exercise.components.camera.SwitchCamera
 import cga.exercise.components.shader.ShaderProgram
 import org.joml.Matrix3f
 import org.joml.Matrix4f
