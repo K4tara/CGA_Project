@@ -12,19 +12,22 @@ uniform mat4 projection_matrix;
 
 uniform vec2 tcMultiplier;
 uniform vec3 cyclePointLightPos;
+uniform vec3 cyclePoint2LightPos;
+uniform vec3 cyclePoint3LightPos;
 uniform vec3 cycleSpotLightPos;
 
-uniform float time;
 uniform int chaos;
 uniform int confuse;
 uniform int shake;
-
+uniform float time;
 
 out struct VertexData{
     vec3 position;
     vec2 texture;
     vec3 normale;
     vec3 toPointLight;
+    vec3 toPointLight2;
+    vec3 toPointLight3;
     vec3 toSpotLight;
 } vertexData;
 
@@ -37,12 +40,18 @@ void main() {
     vec4 lp = view_matrix * vec4(cyclePointLightPos, 1.0); //Position der Lichtquelle im Viewspace
     vertexData.toPointLight = (lp - pos).xyz; //Richtungsvektor der Lichtquelle (im Camera space)
 
+    vec4 lp3 = view_matrix * vec4(cyclePoint2LightPos, 1.0);
+    vertexData.toPointLight2 = (lp3 - pos).xyz;
+
+    vec4 lp4 = view_matrix * vec4(cyclePoint3LightPos, 1.0);
+    vertexData.toPointLight3 = (lp4 - pos).xyz;
+
     vec4 lp2 = view_matrix * vec4(cycleSpotLightPos, 1.0);
     vertexData.toSpotLight = (lp2 - pos).xyz;
 
-
     gl_Position = projection_matrix * pos;
     vertexData.position = -pos.xyz;
+    vertexData.texture = tc * tcMultiplier;
     vertexData.normale = nor.xyz;
 
 

@@ -825,12 +825,23 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun changeMode() {
-        if (window.getKeyState(GLFW_KEY_K)) {
+        if (window.getKeyState(GLFW_KEY_F1)) {
             singlePlayer = true
         }
 
-        if (window.getKeyState(GLFW_KEY_M)) {
+        if (window.getKeyState(GLFW_KEY_F2)) {
             singlePlayer = false
+        }
+
+        if (window.getKeyState(GLFW_KEY_F3)) {
+            sound_1.start()
+            sound_1.loop(Clip.LOOP_CONTINUOUSLY)
+            //sound_2.start()
+        }
+
+        if (window.getKeyState(GLFW_KEY_F4)) {
+            sound_1.stop()
+            //sound_2.stop()
         }
     }
 
