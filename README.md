@@ -1,4 +1,4 @@
-# 3D-Pong ...
+# 3D-Pong
 
 ## Teammitglieder
 - Michael Müller
@@ -11,13 +11,25 @@ Alle Objekte (Spielfeld, Spielfiguren, Wände, Kugel) sollen zeitgemäß wirken 
 
 Im späteren Verlauf des Projekts können noch weitere Features hinzugefügt werden, wie z.B. ein Interface mit Punktestand, eine einfache optionale Gegner-KI oder weitere Effekte, um das Spielgeschehen zu beleben.
 
+## Steuerung
+- Bewegung der Spieler: W & S / Up & Down
+- Kameraperspektive wechseln: 1, 2, 3 (aus 2 oder 3 erst zurück nach 1 wechseln)
+- KI aktivieren/deaktivieren: F1, F2
+- Sound aktivieren/deaktivieren: F3, F4
+- Spiel starten: Enter
+- Neustart: R
+
 ## Featureliste
-Listen Sie hier alle relevanten Features als Liste mit sinnvoller Reihenfolge auf mit Angabe wer das Feature implementiert hat.
-Bei starker Ungleicheit der Features behalten wir uns eine individuelle Notenvergabe vor.
+- Spiellogik & -ablauf _(Katrin & Michael)_
+- Eigene Modelle & Texturen _(Michael)_
+- Kollisionserkennung _(Katrin)_
+- Verschiedene Shaderprogramme (Effekte und Licht) _(Katrin)_
+- Verschiedene Kameraperspektiven _(Katrin)_
+- Lokaler Multiplayer _(Michael)_
+- Einfache KI _(Katrin)_
+- Skybox _(Michael & Katrin)_
+- Sound _(Michael)_
 
-Bspw.
-
-- Verschiedene Kameramodelle (Wechsel zwischen orthographischer und perspektivischer Kamera mittels "c") (Berta)
-- Dynamische Kamera (Steuerung mittels Maus und "WASD" auf der Tastatur) (Carola und Armin)
-- Verschiedene Shaderprogramme (Wechsel mittels "s") (Carola)
-- ...
+## Quellen
+- [Skyboxtextur]()
+- [Soundfiles]()
