@@ -778,7 +778,7 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun effect() {
-        val effect = 2//Random.nextInt(1,5) //1 bis 4
+        val effect = Random.nextInt(1,5) //1 bis 4
 
         when (effect) {
             1 -> {
