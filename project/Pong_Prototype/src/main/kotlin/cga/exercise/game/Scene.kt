@@ -41,6 +41,7 @@ class Scene(private val window: GameWindow) {
     var player2Score = 0
     private var swapControls = false
     private var rolling = true
+    private var singlePlayer = false
     private var resetFactor = 1.668f
     private var itemX = 0f
     private var itemZ = 0f
@@ -97,8 +98,8 @@ class Scene(private val window: GameWindow) {
     private var viewActive = 1 //welche Ansicht ist gerade aktiv (1,2 oder 3)
 
     //Player + ball movement parameters
-    private var speed_player = 9.0f;
-    private var bounds_player_z = 5.5f;
+    private var speed_player = 9.0f
+    private var bounds_player_z = 5.5f
     private var inBounds1ZUp = false
     private var inBounds2ZUp = false
     private var inBounds1ZDown = false
@@ -114,7 +115,7 @@ class Scene(private val window: GameWindow) {
     private var maxSpeedZ = 20
     private var maxSpeedX = 22
     private var speed_ai_player = 0f
-    private var max_speed_ai_player = 7f
+    private var max_speed_ai_player = 8.5f
 
     private var sound_1 : Clip
     private var sound_2 : Clip
@@ -300,18 +301,18 @@ class Scene(private val window: GameWindow) {
         pointLight_player2.lightCol = Vector3f(abs(sin(t/1)),abs(sin(t/3)),abs(sin(t/2)))
 
         start_game(dt)
-
         player_movement(dt)
 
         if (!pause) ball_movement(dt)
 
         camera_switch(dt,t)
-
-        winner()
-        //playerAI(dt,t)
-        //playerAI(dt,t)
+        changeMode()
         controlBallspeed()
+        winner()
 
+        if (singlePlayer) {
+            playerAI(dt,t)
+        }
 
         item.rotateLocal(Math.toRadians(0.0f), 0.01f, -0.0f)
 
@@ -346,8 +347,12 @@ class Scene(private val window: GameWindow) {
         wallDown.render(useShader)
         wallUp.render(useShader)
         player1.render(useShader)
-        player2.render(useShader)
 
+        if (singlePlayer) {
+            playerAI.render(useShader)
+        } else {
+            player2.render(useShader)
+        }
 
         if (itemSpawn) {
             item.render(useShader)
@@ -383,9 +388,10 @@ class Scene(private val window: GameWindow) {
         mesh = Mesh(obj_mesh.vertexData, obj_mesh.indexData, vertexAttributes, material)
         renderable.list.add(mesh)
     }
+
     private fun start_game(dt: Float) {
 
-        if (window.getKeyState(GLFW_KEY_ENTER) && pause == true) {
+        if (window.getKeyState(GLFW_KEY_ENTER) && pause) {
             text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
             pause = false
             text_score.translateLocal(Vector3f(0.0f, 0.01f, 0.0f))
@@ -419,12 +425,14 @@ class Scene(private val window: GameWindow) {
             player1.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
         }
 
-        if (keyUp && inBounds2ZUp) { // player2.getPosition().z >= -bounds_player_z) {
-            player2.translateLocal(Vector3f(0.0f, 0.0f, -speed_player  * dt))
-        }
+        if (!singlePlayer) {
+            if (keyUp && inBounds2ZUp) { // player2.getPosition().z >= -bounds_player_z) {
+                player2.translateLocal(Vector3f(0.0f, 0.0f, -speed_player  * dt))
+            }
 
-        if (keyDown && inBounds2ZDown) { // player2.getPosition().z <= bounds_player_z) {
-            player2.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
+            if (keyDown && inBounds2ZDown) { // player2.getPosition().z <= bounds_player_z) {
+                player2.translateLocal(Vector3f(0.0f, 0.0f, speed_player  * dt))
+            }
         }
     }
 
@@ -441,9 +449,11 @@ class Scene(private val window: GameWindow) {
             reverse(player1)
         }
 
-        if (ball.getPosition().x >= player2.getPosition().x-0.5 && ball.getPosition().x <= player2.getPosition().x+0.5 &&
-                ball.getPosition().z+0.5 <= player2.getPosition().z+2 && ball.getPosition().z-0.5 >= player2.getPosition().z-2) {
-            reverse(player2)
+        if (!singlePlayer) {
+            if (ball.getPosition().x >= player2.getPosition().x - 0.5 && ball.getPosition().x <= player2.getPosition().x + 0.5 &&
+                    ball.getPosition().z + 0.5 <= player2.getPosition().z + 2 && ball.getPosition().z - 0.5 >= player2.getPosition().z - 2) {
+                reverse(player2)
+            }
         }
 
         //item intersection (großzügig gewählte Parameter -> man soll das Item auch treffen können)
@@ -699,7 +709,7 @@ class Scene(private val window: GameWindow) {
     private fun playerAI(dt: Float, t: Float) {
         val p_center = (8 + playerAI.getPosition().z) + (4/2)
         val b_center = (9 + ball.getPosition().z) + (2/2)
-        var move = ((b_center - p_center)*1).toInt()
+        var move = ((b_center - p_center)*1.2).toInt()
 
         if (playerAI.getPosition().z+move >= -bounds_player_z && playerAI.getPosition().z+move <= bounds_player_z) {
             playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
@@ -719,6 +729,16 @@ class Scene(private val window: GameWindow) {
         if (ball.getPosition().x >= playerAI.getPosition().x-0.5 && ball.getPosition().x <= playerAI.getPosition().x+0.5 &&
                 ball.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
             reverse(playerAI)
+        }
+    }
+
+    private fun changeMode() {
+        if (window.getKeyState(GLFW_KEY_K)) {
+            singlePlayer = true
+        }
+
+        if (window.getKeyState(GLFW_KEY_M)) {
+            singlePlayer = false
         }
     }
 
