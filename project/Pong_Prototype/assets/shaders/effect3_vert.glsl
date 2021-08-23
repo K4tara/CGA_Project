@@ -60,9 +60,6 @@ void main() {
         float strength = 0.3;
         vec2 pos = vec2(tc.x + sin(time) * strength, tc.y + cos(time) * strength);
         vertexData.texture = pos * tcMultiplier;
-    } else if (confuse == 1) {
-        //gl_Position.y *= -1;
-        vertexData.texture = tc * tcMultiplier;
     } else {
         vertexData.texture = tc * tcMultiplier;
     }
@@ -71,6 +68,6 @@ void main() {
         float strength = 0.5;
         gl_Position.x += cos(time * 10) * strength;
         gl_Position.y += cos(time * 15) * strength;
-        gl_Position.z += cos(time * 10) * strength;
+        //gl_Position.z += cos(time * 10) * strength;
     }
 }

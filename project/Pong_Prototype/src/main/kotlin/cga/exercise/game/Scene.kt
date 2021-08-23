@@ -123,7 +123,7 @@ class Scene(private val window: GameWindow) {
         effectShader = ShaderProgram("assets/shaders/effect3_vert.glsl", "assets/shaders/effect3_frag.glsl") //all effects in one shader
         skyboxShader = ShaderProgram("assets/shaders/skybox_vert.glsl", "assets/shaders/skybox_frag.glsl")
 
-        useShader = classicStaticShader
+        useShader = effectShader
         effectTime = EFFECT_TIME
         spawnTime = SPAWN_TIME
         speedX = -START_SPEEDX
@@ -787,17 +787,17 @@ class Scene(private val window: GameWindow) {
 
         when (effect) {
             1 -> {
-                useShader = effectShader
+                //useShader = effectShader
                 chaos = 1
             }
             2 -> {
-                useShader = effectShader
+                //useShader = effectShader
                 confuse = 1
                 swapControls = true
                 colorSwap()
             }
             3 -> {
-                useShader = effectShader
+                //useShader = effectShader
                 shake = 1
             }
             4 -> speedUp()
@@ -809,17 +809,17 @@ class Scene(private val window: GameWindow) {
     private fun endEffect() {
         when (effectNumber) {
             1 -> {
-                useShader = classicStaticShader
+                //useShader = classicStaticShader
                 chaos = 0
             }
             2 -> {
-                useShader = classicStaticShader
+                //useShader = classicStaticShader
                 confuse = 0
                 swapControls = false
                 colorSwap()
             }
             3 -> {
-                useShader = classicStaticShader
+                //useShader = classicStaticShader
                 shake = 0
             }
             4 -> slowDown()

@@ -18,16 +18,17 @@ void main() {
 
     if (chaos == 1) {
         float strength = 0.3;
-        vec3 pos = vec3(aPos.x + sin(time) * strength, aPos.y + cos(time) * strength, 1.0);
+        vec3 pos = vec3(aPos.x + sin(time) * strength, aPos.y + cos(time) * strength, aPos.z + sin(time) * strength);
         TexCoords = pos;
     } else {
         TexCoords = aPos;
     }
 
     if (shake == 1) {
-        float strength = 0.5;
-        gl_Position.x += cos(time * 10) * strength;
-        gl_Position.y += cos(time * 15) * strength;
-        gl_Position.z += cos(time * 10) * strength;
+        float strength = 15;
+
+        TexCoords.x += cos(time * 10) * strength;
+        TexCoords.y += cos(time * 15) * strength;
+        TexCoords.z += cos(time * 10) * strength;
     }
 }

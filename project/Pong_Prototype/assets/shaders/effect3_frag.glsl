@@ -108,8 +108,6 @@ void main() {
         color = vec4(result, 1.0);
     } else if (confuse == 1) {
         color = vec4(1.0 - result.rgb, 1.0);
-    } else if (shake == 1) {
-        color = vec4(result, time/0.5);
     } else {
         color = vec4(result, 1.0);
     }
