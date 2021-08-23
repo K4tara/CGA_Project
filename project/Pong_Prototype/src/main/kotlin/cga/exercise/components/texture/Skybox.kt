@@ -92,7 +92,7 @@ class Skybox {
         glVertexAttribPointer(0,3, GL_FLOAT, false, 3*4,0)
     }
 
-    fun render(shader: ShaderProgram, camera: PongCamera) {
+    fun render(shader: ShaderProgram, camera: PongCamera, t: Float, chaos: Int, confuse: Int, shake: Int) {
         glDepthFunc(GL_LEQUAL) //change depth function so depth test passes when values are equal to depth buffer's content
 
         shader.use()
@@ -101,6 +101,10 @@ class Skybox {
         shader.setUniform("view", viewMatrix,false)
         shader.setUniform("projection", camera.getCalculateProjectionMatrix(),false)
         shader.setUniform("skybox", 0)
+        shader.setUniform("time",t)
+        shader.setUniform("chaos", chaos)
+        shader.setUniform("confuse", confuse)
+        shader.setUniform("shake", shake)
 
         glBindVertexArray(skyboxVao)
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureID)

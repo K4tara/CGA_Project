@@ -130,12 +130,12 @@ class Scene(private val window: GameWindow) {
 
         skybox = Skybox()
         val skyboxFaces = listOf(
-                "assets/textures/Skybox/backup/posx.jpg",
-                "assets/textures/Skybox/backup/negx.jpg",
-                "assets/textures/Skybox/backup/posy.jpg",
-                "assets/textures/Skybox/backup/negy.jpg",
-                "assets/textures/Skybox/backup/posz.jpg",
-                "assets/textures/Skybox/backup/negz.jpg"
+                "assets/textures/Skybox/posx.jpg",
+                "assets/textures/Skybox/negx.jpg",
+                "assets/textures/Skybox/posy.jpg",
+                "assets/textures/Skybox/negy.jpg",
+                "assets/textures/Skybox/posz.jpg",
+                "assets/textures/Skybox/negz.jpg"
         )
         skybox.setupVaoVbo()
         skybox.loadCubemap(skyboxFaces)
@@ -261,7 +261,7 @@ class Scene(private val window: GameWindow) {
 
 
         //Setting Lighting
-        pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,1f))
+        pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,1f), Vector3f(1.0f,0.6f,0.1f))
         pointLight_player1 = Pointlight(camera.getWorldPosition(), Vector3f(1f,0f,0f), Vector3f(1.0f,0.4f,0.1f))
         pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(0f,1f,0f), Vector3f(1.0f,0.4f,0.1f))
 
@@ -298,6 +298,11 @@ class Scene(private val window: GameWindow) {
         text_p1_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
         text_p2_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
 
+        score_bar.translateLocal(Vector3f(0.5f, 0f, 0.0f))
+        score_p1.translateLocal(Vector3f(0.5f, 0f, 0.0f))
+        score_p2.translateLocal(Vector3f(0.5f, 0f, 0.0f))
+        text_score.translateLocal(Vector3f(0.5f, 0f, 0.0f))
+
         camera.rotateLocal(Math.toRadians(-90.0f), 0.0f, 0.0f)
         camera.translateLocal(Vector3f(0.0f,0.0f,8.0f))
     }
@@ -311,9 +316,9 @@ class Scene(private val window: GameWindow) {
         if (!pause) {
             ball_movement(dt)
             player_movement(dt)
-            camera_switch(dt,t)
         }
 
+        camera_switch(dt,t)
         changeMode()
         controlBallspeed()
         winner()
@@ -375,7 +380,7 @@ class Scene(private val window: GameWindow) {
         pointLight_ball.bind(useShader,"cyclePoint")
         spotLight.bind(useShader,"cycleSpot", camera.getCalculateViewMatrix())
 
-        if (effectNumber !in 1..3) skybox.render(skyboxShader, camera)
+        skybox.render(skyboxShader, camera, t, chaos, confuse, shake)
     }
 
     fun load_models_assign_textures (vertexAttributes : Array<VertexAttribute>, renderable: Renderable, modelPath: String,
@@ -567,7 +572,7 @@ class Scene(private val window: GameWindow) {
         //wenn in Position 2 oder 3: zuerst zurück nach 1
 
         //Top/Down-Ansicht (Standard)
-        if (window.getKeyState(GLFW_KEY_1)) {
+        if (window.getKeyState(GLFW_KEY_1) || pause) {
             if (view2 && view1 == false) {
                 camera.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,-4.0f,-3.0f))
@@ -611,7 +616,7 @@ class Scene(private val window: GameWindow) {
         }
 
         //Seitenansicht
-        if (window.getKeyState(GLFW_KEY_2) && viewActive == 1) {
+        if (window.getKeyState(GLFW_KEY_2) && viewActive == 1 && !pause) {
             if (view2 == false) {
                 camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.translateLocal(Vector3f(0.0f,4.0f,3.0f))
@@ -632,7 +637,7 @@ class Scene(private val window: GameWindow) {
         }
 
         //3rd-Person Ansicht (für Spieler 1)
-        if (window.getKeyState(GLFW_KEY_3) && viewActive == 1) {
+        if (window.getKeyState(GLFW_KEY_3) && viewActive == 1 && !pause) {
             if (view3 == false) {
                 camera.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 camera.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
