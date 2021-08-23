@@ -57,6 +57,8 @@ class Scene(private val window: GameWindow) {
     private var chaos = 0
     private var confuse = 0
     private var shake = 0
+    private var time = 60f
+    private var temp = 0
 
     //Objects + Camera
     private var ground = Renderable()
@@ -107,7 +109,9 @@ class Scene(private val window: GameWindow) {
     private var pause = true
     private var speedZ = 0
     private var speedX = 0
+    private var speedFactor = 1.1f
     private var START_SPEEDX = 14
+    private var mediSpeedX = START_SPEEDX + 2
     private var maxSpeedZ = 20
     private var maxSpeedX = 22
     private var speed_ai_player = 0f
@@ -709,7 +713,7 @@ class Scene(private val window: GameWindow) {
         } else {
             println("PADDLE_REVERSE")
 
-            //sound_2.start()
+            sound_2.start()
 
             val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
             val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
@@ -720,6 +724,22 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun controlBallspeed() {
+
+        if (window.currentTime >= time && speedX != maxSpeedX && speedX != -maxSpeedX) {
+            if (speedX > 0) {
+                speedX = mediSpeedX
+            } else {
+                speedX = -mediSpeedX
+            }
+            speedZ * speedFactor
+
+            time += 60
+            mediSpeedX += 2
+            speedFactor += 0.1f
+
+            println("speedUp!")
+        }
+
         if (speedZ > maxSpeedZ) {
             speedZ = maxSpeedZ
         }
@@ -739,8 +759,17 @@ class Scene(private val window: GameWindow) {
 
     private fun resetGame(posX: Float, posZ: Float) {
         rolling = false
+
+        if (speedX > 0) {
+            speedX = -START_SPEEDX
+        } else {
+            speedX = START_SPEEDX
+        }
         speedZ = 0
-        speedX *= -1
+
+        time = window.currentTime + 60f
+        mediSpeedX = START_SPEEDX + 2
+        speedFactor = 1.1f
         itemSpawn = false
         placeItem = true
         spawnTime = SPAWN_TIME
@@ -872,6 +901,8 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun speedUp() {
+        temp = abs(speedX)
+
         if (speedX > 0) {
             speedX = maxSpeedX
         } else {
@@ -883,9 +914,9 @@ class Scene(private val window: GameWindow) {
 
     private fun slowDown() {
         if (speedX > 0) {
-            speedX = START_SPEEDX
+            speedX = temp
         } else {
-            speedX = -START_SPEEDX
+            speedX = -temp
         }
 
         speedZ / 1.4
@@ -929,7 +960,7 @@ class Scene(private val window: GameWindow) {
         if (window.getKeyState(GLFW_KEY_F3)) {
             sound_1.start()
             sound_1.loop(Clip.LOOP_CONTINUOUSLY)
-            //sound_2.start()
+            sound_2.start()
         }
 
         if (window.getKeyState(GLFW_KEY_F4)) {
