@@ -1,10 +1,5 @@
 # Video
-Erstellen Sie ein max. 3 Minuten langes Video, welches ihr laufendes Projekt vorstellt. 
-Erläutern Sie dabei, welche Features Sie implementiert haben und zeigen Sie diese.
-Das Video darf nur Ihre Anwendung zeigen, sowie Ihre Stimmen beinhalten.
+[Erklärvideo](https://www.youtube.com/watch?v=hHvGrWKMk-g)
 
-Zur Erstellung können Sie ein beliebiges Programm verwenden, wir können folgende empfehlen:
-- https://obsproject.com/
-- https://www.techsmith.de/camtasia.html
-
-Bitte speichern Sie das Video als MP4 (H.264).
+Im Video wird ein etwas älterer Projektstand gezeigt. Einige Features, sowie die Optik wurden mittlerweile verändert 
+(-> alle 4 Effekte wurden leicht abgeändert und betreffen nun auch die Skybox, die Frisbee wird nun pro Minute schneller, geänderte Skyboxtextur und andere optische Anpassungen).
