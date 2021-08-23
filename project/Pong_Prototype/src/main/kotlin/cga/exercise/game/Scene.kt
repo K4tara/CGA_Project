@@ -75,6 +75,8 @@ class Scene(private val window: GameWindow) {
     private var wallUp = Renderable()
     private var wallDown = Renderable()
     private var camera = PongCamera()
+    private val materialWhite: Material
+    private val materialBlack: Material
 
     //Lighting
     private var pointLight_ball = Pointlight(Vector3f(),Vector3f())
@@ -259,6 +261,23 @@ class Scene(private val window: GameWindow) {
             "assets/textures/wall_spec.png")
 
 
+        val texture_emit = Texture2D("assets/textures/white.png",true)
+        val texture_diff = Texture2D("assets/textures/white.png",true)
+        val texture_spec = Texture2D("assets/textures/white.png",true)
+        texture_emit.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
+        texture_diff.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_spec.setTexParams(GL_REPEAT, GL_REPEAT, GL_NEAREST,GL_NEAREST)
+
+        val texture_emit2 = Texture2D("assets/textures/black.jpg",true)
+        val texture_diff2 = Texture2D("assets/textures/black.jpg",true)
+        val texture_spec2 = Texture2D("assets/textures/black.jpg",true)
+        texture_emit2.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
+        texture_diff2.setTexParams(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR)
+        texture_spec2.setTexParams(GL_REPEAT, GL_REPEAT, GL_NEAREST,GL_NEAREST)
+
+        materialWhite = Material(texture_diff, texture_emit, texture_spec)
+        materialBlack = Material(texture_diff2, texture_emit2, texture_spec2)
+
 
         //Setting Lighting
         pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,1f), Vector3f(1.0f,0.6f,0.1f))
@@ -322,6 +341,7 @@ class Scene(private val window: GameWindow) {
         changeMode()
         controlBallspeed()
         winner()
+        colorSwap()
 
         if (singlePlayer) {
             playerAI(dt,t)
@@ -581,10 +601,10 @@ class Scene(private val window: GameWindow) {
                 score_bar.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p1.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p2.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
-                text_score.translateLocal(Vector3f(0.0f,0.0f,6.0f))
-                score_bar.translateLocal(Vector3f(0.0f,0.0f,6.0f))
-                score_p1.translateLocal(Vector3f(0.0f,0.0f,6.0f))
-                score_p2.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                text_score.translateLocal(Vector3f(0.0f,-3.0f,4.0f))
+                score_bar.translateLocal(Vector3f(0.0f,-3.0f,4.0f))
+                score_p1.translateLocal(Vector3f(0.0f,-3.0f,4.0f))
+                score_p2.translateLocal(Vector3f(0.0f,-3.0f,4.0f))
 
                 viewActive = 1
                 view1 = true
@@ -598,16 +618,16 @@ class Scene(private val window: GameWindow) {
 
                 text_score.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
                 text_score.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
-                text_score.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                text_score.translateLocal(Vector3f(0.0f,-5.0f,2.0f))
                 score_bar.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
                 score_bar.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
-                score_bar.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_bar.translateLocal(Vector3f(0.0f,-5.0f,2.0f))
                 score_p1.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
                 score_p1.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
-                score_p1.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p1.translateLocal(Vector3f(0.0f,-5.0f,2.0f))
                 score_p2.rotateAroundPoint(0f,Math.toRadians(90f),0.0f,Vector3f(0.0f))
                 score_p2.rotateAroundPoint(Math.toRadians(-85f),0.0f,0.0f,Vector3f(0.0f))
-                score_p2.translateLocal(Vector3f(0.0f,0.0f,6.0f))
+                score_p2.translateLocal(Vector3f(0.0f,-5.0f,2.0f))
 
                 viewActive = 1
                 view1 = true
@@ -625,10 +645,10 @@ class Scene(private val window: GameWindow) {
                 score_bar.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p1.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p2.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
-                text_score.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
-                score_bar.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
-                score_p1.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
-                score_p2.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                text_score.translateLocal(Vector3f(0.0f,3.0f,-4.0f))
+                score_bar.translateLocal(Vector3f(0.0f,3.0f,-4.0f))
+                score_p1.translateLocal(Vector3f(0.0f,3.0f,-4.0f))
+                score_p2.translateLocal(Vector3f(0.0f,3.0f,-4.0f))
 
                 viewActive = 2
                 view2 = true
@@ -645,16 +665,16 @@ class Scene(private val window: GameWindow) {
 
                 text_score.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 text_score.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
-                text_score.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                text_score.translateLocal(Vector3f(0.0f,5.0f,-2.0f))
                 score_bar.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 score_bar.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
-                score_bar.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_bar.translateLocal(Vector3f(0.0f,5.0f,-2.0f))
                 score_p1.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p1.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
-                score_p1.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p1.translateLocal(Vector3f(0.0f,5.0f,-2.0f))
                 score_p2.rotateAroundPoint(Math.toRadians(85f),0.0f,0.0f,Vector3f(0.0f))
                 score_p2.rotateAroundPoint(0f,Math.toRadians(-90f),0.0f,Vector3f(0.0f))
-                score_p2.translateLocal(Vector3f(0.0f,0.0f,-6.0f))
+                score_p2.translateLocal(Vector3f(0.0f,5.0f,-2.0f))
 
                 viewActive = 3
                 view3 = true
@@ -794,7 +814,6 @@ class Scene(private val window: GameWindow) {
                 //useShader = effectShader
                 confuse = 1
                 swapControls = true
-                colorSwap()
             }
             3 -> {
                 //useShader = effectShader
@@ -816,7 +835,6 @@ class Scene(private val window: GameWindow) {
                 //useShader = classicStaticShader
                 confuse = 0
                 swapControls = false
-                colorSwap()
             }
             3 -> {
                 //useShader = classicStaticShader
@@ -829,27 +847,26 @@ class Scene(private val window: GameWindow) {
     }
 
     private fun colorSwap() {
-        val texture = Texture2D("assets/textures/wall.png",true)
-        texture.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
-        val materialBrown = Material(texture, texture, texture)
-
-        val texture2 = Texture2D("assets/textures/white.png",true)
-        texture2.setTexParams(GL_REPEAT, GL_REPEAT,  GL_NEAREST,GL_NEAREST)
-        val materialWhite = Material(texture2, texture2, texture2)
-
-        when (confuse) {
+        when (viewActive) {
             1 -> {
-                text_score.list.first().material = materialBrown
-                score_bar.list.first().material = materialBrown
+                text_score.list.first().material = materialWhite
+                score_bar.list.first().material = materialWhite
+                score_p1.list.first().material = materialBlack
+                score_p2.list.first().material = materialBlack
+            }
+
+            2 -> {
+                text_score.list.first().material = materialBlack
+                score_bar.list.first().material = materialBlack
                 score_p1.list.first().material = materialWhite
                 score_p2.list.first().material = materialWhite
             }
 
-            0 -> {
-                text_score.list.first().material = materialWhite
-                score_bar.list.first().material = materialWhite
-                score_p1.list.first().material = materialBrown
-                score_p2.list.first().material = materialBrown
+            3 -> {
+                text_score.list.first().material = materialBlack
+                score_bar.list.first().material = materialBlack
+                score_p1.list.first().material = materialWhite
+                score_p2.list.first().material = materialWhite
             }
         }
     }
