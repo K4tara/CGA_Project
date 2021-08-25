@@ -106,19 +106,19 @@ class Scene(private val window: GameWindow) {
         gamelogic.restart_game(dt)
         gamelogic.camera_switch(dt,t)
         gamelogic.changeMode()
-        gamelogic.controlBallspeed()
-        gamelogic.winner()
+        gamelogic.winner(dt)
         gamelogic.colorSwap()
 
         //disable movement when game is paused
         if (!gamelogic.pause) {
             gamelogic.ball_movement(dt)
             gamelogic.player_movement(dt)
+            gamelogic.controlBallspeed()
         }
 
         //if single player mode activate AI
         if (gamelogic.singlePlayer) {
-            gamelogic.playerAI(dt,t)
+            gamelogic.playerAI(dt)
         }
 
         //end effect after some time
@@ -163,8 +163,10 @@ class Scene(private val window: GameWindow) {
         //render player2 if multiplayer, AI if singleplayer
         if (gamelogic.singlePlayer) {
             playerAI.render(useShader)
+            pointLight_player2.parent = playerAI
         } else {
             player2.render(useShader)
+            pointLight_player2.parent = player2
         }
 
         //render item
@@ -306,7 +308,7 @@ class Scene(private val window: GameWindow) {
         //Setting Lighting
         pointLight_ball = Pointlight(camera.getWorldPosition(), Vector3f(1f,1f,1f), Vector3f(1.0f,0.6f,0.1f))
         pointLight_player1 = Pointlight(camera.getWorldPosition(), Vector3f(1f,0f,0f), Vector3f(1.0f,0.4f,0.1f))
-        pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(0f,1f,0f), Vector3f(1.0f,0.4f,0.1f))
+        pointLight_player2 = Pointlight(camera.getWorldPosition(), Vector3f(0f,0f,1f), Vector3f(1.0f,0.4f,0.1f))
 
         spotLight = Spotlight(Vector3f(0.0f, 30.0f, 60.0f), Vector3f(70.0f))
     }
@@ -319,7 +321,6 @@ class Scene(private val window: GameWindow) {
 
         pointLight_ball.parent = ball
         pointLight_player1.parent = player1
-        pointLight_player2.parent = player2
 
         player1.scaleLocal(Vector3f(0.8f))
         player1.translateLocal(Vector3f(-12.0f, 0.0f, 0.0f))
@@ -335,7 +336,7 @@ class Scene(private val window: GameWindow) {
         wallDown.scaleLocal(Vector3f(7f,1f,1f))
         wallUp.scaleLocal(Vector3f(7f,1f,1f))
         item.scaleLocal(Vector3f(0.4f))
-        item.translateLocal(Vector3f(0.0f, 1.0f, 0.0f))
+        item.translateLocal(Vector3f(0f, 1.0f, 0f))
 
         text_p1_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))
         text_p2_won.translateLocal(Vector3f(0.0f, -2f, 0.0f))

@@ -37,11 +37,11 @@ class Gamelogic (val window: GameWindow,
     private var swapControls = false
     private var rolling = true
     var singlePlayer = false
-    private var resetFactor = 1.668f
+    private var resetFactor = 2.49f
     private var itemX = 0f
     private var itemZ = 0f
-    private var itemBoundsX = 18
-    private var itemBoundsZ = 12
+    private var itemBoundsX = 11
+    private var itemBoundsZ = 6
     var itemSpawn = false
     var placeItem = true
     var effectNumber = 0
@@ -53,11 +53,12 @@ class Gamelogic (val window: GameWindow,
     var confuse = 0
     var shake = 0
     private var time = 60f
-    private var temp = 0
+    private var temp = 0f
 
     //Player + ball movement parameters
     private var speed_player = 9.0f
-    private var bounds_player_z = 5.5f
+    private var bounds_player_z = 5.4f
+    private var bounds_playerAI_z = 5.5f
     private var inBounds1ZUp = false
     private var inBounds2ZUp = false
     private var inBounds1ZDown = false
@@ -67,15 +68,23 @@ class Gamelogic (val window: GameWindow,
     private var keyUp = false
     private var keyDown = false
     var pause = true
-    private var speedZ = 0
-    private var speedX = 0
+    private var speedZ = 0f
+    private var speedX = 0f
     private var speedFactor = 1.1f
-    private var START_SPEEDX = 14
-    private var mediSpeedX = START_SPEEDX + 2
-    private var maxSpeedZ = 20
-    private var maxSpeedX = 22
+    private var START_SPEEDX = 14f
+    private var mediSpeedX = START_SPEEDX + 2f
+    private var maxSpeedZ = 20f
+    private var maxSpeedX = 22f
     private var speed_ai_player = 0f
     private var max_speed_ai_player = 8.5f
+
+    //Physics variables
+    private var ballHalfWidth = 1f //2 breit
+    private var ballHalfHeight = 1f //2 hoch
+    private var playerWidth = 0.8f //1 breit
+    private var playerHalfHeight = 2.6f //5 hoch
+    private var itemHalfHeight = 0.5f //1 hoch
+    private var wallWidth = 0.7f //0.5 breit
 
     //Camera
     private var view1: Boolean = false
@@ -144,7 +153,7 @@ class Gamelogic (val window: GameWindow,
 
             pause = false
             text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
-            resetGame(ball.getPosition().x, ball.getPosition().z)
+            resetGame(ball.getPosition().x, ball.getPosition().z, dt)
 
             if(player1Score==1){
                 score_p2.translateLocal(Vector3f(0.2f, 0.0f,0.0f))
@@ -209,7 +218,6 @@ class Gamelogic (val window: GameWindow,
                 println("RESTART")
                 println("SCORE  $player1Score : $player2Score")
             }
-
         }
     }
 
@@ -257,24 +265,30 @@ class Gamelogic (val window: GameWindow,
             ball.translateLocal(Vector3f(speedX * dt,0.0f,speedZ * dt))
         }
 
-        //check for intersection (cheat mode)
-        //-> jede Seite des Objekts auf Überschneidung überprüfen (Zahlen = Hälfte der Breite der Objekte)
-        if (ball.getPosition().x <= player1.getPosition().x+0.5 && ball.getPosition().x >= player1.getPosition().x-0.5 &&
-                ball.getPosition().z+0.5 <= player1.getPosition().z+2 && ball.getPosition().z-0.5 >= player1.getPosition().z-2) {
+        //check for intersection
+        //-> jede Seite des Objekts auf Überschneidung überprüfen
+        if (ball.getPosition().x <= player1.getPosition().x + playerWidth
+                && ball.getPosition().x >= player1.getPosition().x - playerWidth
+                && ball.getPosition().z + ballHalfHeight <= player1.getPosition().z + playerHalfHeight
+                && ball.getPosition().z - ballHalfHeight >= player1.getPosition().z - playerHalfHeight) {
             reverse(player1)
         }
 
         if (!singlePlayer) {
-            if (ball.getPosition().x >= player2.getPosition().x - 0.5 && ball.getPosition().x <= player2.getPosition().x + 0.5 &&
-                    ball.getPosition().z + 0.5 <= player2.getPosition().z + 2 && ball.getPosition().z - 0.5 >= player2.getPosition().z - 2) {
+            if (ball.getPosition().x <= player2.getPosition().x + playerWidth
+                    && ball.getPosition().x >= player2.getPosition().x - playerWidth
+                    && ball.getPosition().z + ballHalfHeight <= player2.getPosition().z + playerHalfHeight
+                    && ball.getPosition().z - ballHalfHeight >= player2.getPosition().z - playerHalfHeight) {
                 reverse(player2)
             }
         }
 
         //item intersection (großzügig gewählte Parameter -> man soll das Item auch treffen können)
         if (itemSpawn &&
-                item.getPosition().x >= ball.getPosition().x-0.5 && item.getPosition().x <= ball.getPosition().x+0.5 &&
-                item.getPosition().z+0.5 <= ball.getPosition().z+1 && item.getPosition().z-0.5 >= ball.getPosition().z-1) {
+                item.getPosition().x >= ball.getPosition().x - ballHalfWidth
+                && item.getPosition().x <= ball.getPosition().x + ballHalfWidth
+                && item.getPosition().z + itemHalfHeight <= ball.getPosition().z + ballHalfHeight
+                && item.getPosition().z - itemHalfHeight >= ball.getPosition().z - ballHalfHeight) {
 
             println("item activated!")
             itemSpawn = false
@@ -283,11 +297,11 @@ class Gamelogic (val window: GameWindow,
         }
 
         //bei den Wänden interessiert uns nur eine Seite
-        if (ball.getPosition().z >= (wallDown.getPosition().z)-0.5) {
+        if (ball.getPosition().z >= (wallDown.getPosition().z) - wallWidth) {
             reverse(wallDown)
         }
 
-        if (ball.getPosition().z <= (wallUp.getPosition().z)+0.5) {
+        if (ball.getPosition().z <= (wallUp.getPosition().z) + wallWidth) {
             reverse(wallUp)
         }
     }
@@ -302,16 +316,14 @@ class Gamelogic (val window: GameWindow,
 
             sound_2.start()
 
-            val o_center = (7 + obj.getPosition().z) + (4 / 2) // 7 & 9 = z = Abstand zum unteren Spielfeldrand
-            val b_center = (9 + ball.getPosition().z) + (1 / 2) // (4/2) & (1/2) = Hälfte der Länge der Objekte
-
             speedX *= -1
-            speedZ += ((b_center - o_center) * 2).toInt()  // centerBall - centerPaddle; 2 = Konstante zur Erhöhung des Abprallwinkels
+            speedZ += (ball.getPosition().z - obj.getPosition().z) * 1.2f // centerBall - centerPaddle; 1.2 = Konstante zur Erhöhung des Abprallwinkels
         }
     }
 
     fun controlBallspeed() {
 
+        //ball wird pro Minute schneller
         if (window.currentTime >= time && speedX != maxSpeedX && speedX != -maxSpeedX) {
             if (speedX > 0) {
                 speedX = mediSpeedX
@@ -344,7 +356,8 @@ class Gamelogic (val window: GameWindow,
         }
     }
 
-    private fun resetGame(posX: Float, posZ: Float) {
+    private fun resetGame(posX: Float, posZ: Float, dt: Float) {
+        //reset nach einem Punkt/Tor
         rolling = false
 
         if (speedX > 0) {
@@ -352,7 +365,7 @@ class Gamelogic (val window: GameWindow,
         } else {
             speedX = START_SPEEDX
         }
-        speedZ = 0
+        speedZ = 0f
 
         time = window.currentTime + 60f
         mediSpeedX = START_SPEEDX + 2
@@ -366,7 +379,7 @@ class Gamelogic (val window: GameWindow,
         rolling = true
     }
 
-    fun winner() {
+    fun winner(dt: Float) {
         if (ball.getPosition().x > player2.getPosition().x+2) {
             player1Score++
 
@@ -381,7 +394,7 @@ class Gamelogic (val window: GameWindow,
             println("SCORE  $player1Score : $player2Score")
             val posX = ball.getPosition().x
             val posZ = ball.getPosition().z
-            resetGame(posX,posZ)
+            resetGame(posX,posZ,dt)
         }
 
         if (ball.getPosition().x < player1.getPosition().x-2) {
@@ -398,23 +411,44 @@ class Gamelogic (val window: GameWindow,
             println("SCORE  $player1Score : $player2Score")
             val posX = ball.getPosition().x
             val posZ = ball.getPosition().z
-            resetGame(posX,posZ)
+            resetGame(posX,posZ,dt)
         }
     }
 
-    private fun placeItem() {
-        itemX = Random.nextInt(-itemBoundsX,itemBoundsX).toFloat()
-        itemZ = Random.nextInt(-itemBoundsZ,itemBoundsZ).toFloat()
+    private fun placeItem(dt: Float) {
+        while (true) {
+            itemX = Random.nextInt(-itemBoundsX,itemBoundsX).toFloat()
+            itemZ = Random.nextInt(-itemBoundsZ,itemBoundsZ).toFloat()
 
-        //can´t move out of bounds
-        if (item.getPosition().z+itemZ >= -6 && item.getPosition().z+itemZ <= 6 &&
-                item.getPosition().x+itemX >= -11 && item.getPosition().x+itemX <= 11) {
-
+            //println("item.oldPos.x: ${item.getPosition().x}")
+            //println("item.oldPos.z: ${item.getPosition().z}")
             item.translateLocal(Vector3f(itemX, 0.0f, itemZ))
-            itemSpawn = true
-            placeItem = false
-            println("new item has appeared!")
-            println("Item Position X: ${item.getPosition().x}, Z: ${item.getPosition().z}")
+            //println("item.newPos.x: ${item.getPosition().x}")
+            //println("item.newPos.z: ${item.getPosition().z}")
+
+            //item can´t be rendered if out of bounds
+            if (placeItem &&
+                    item.getPosition().z >= -5 && item.getPosition().z <= 5 &&
+                    item.getPosition().x >= -9 && item.getPosition().x <= 9) {
+
+                itemSpawn = true
+                placeItem = false
+                println("new item has appeared!")
+                println("Item Position X: ${item.getPosition().x}, Z: ${item.getPosition().z}")
+                break
+            }
+
+            //get out of loop if something goes wrong
+            if (item.getPosition().z <= -30 || item.getPosition().z >= 30 ||
+                    item.getPosition().x >= 30 || item.getPosition().x <= -30) {
+
+                println("unlucky..")
+                println("Item Position X: ${item.getPosition().x}, Z: ${item.getPosition().z}")
+                val posX = item.getPosition().x
+                val posZ = item.getPosition().z
+                item.translateLocal(Vector3f(-posX * resetFactor, 0.0f, -posZ * resetFactor))
+                break
+            }
         }
     }
 
@@ -509,16 +543,14 @@ class Gamelogic (val window: GameWindow,
         speedZ / 1.4
     }
 
-    fun playerAI(dt: Float, t: Float) {
-        val p_center = (8 + playerAI.getPosition().z) + (4/2)
-        val b_center = (9 + ball.getPosition().z) + (2/2)
-        var move = ((b_center - p_center)*1.2).toInt()
+    fun playerAI(dt: Float) {
+        val move = (ball.getPosition().z - playerAI.getPosition().z) * 0.8f //Faktor zum Abschwächen der KI
 
-        if (playerAI.getPosition().z+move >= -bounds_player_z && playerAI.getPosition().z+move <= bounds_player_z) {
-            playerAI.translateLocal(Vector3f(0.0f, 0.0f, speed_ai_player  * dt))
+        //stays in bounds
+        if (playerAI.getPosition().z+move >= -bounds_playerAI_z && playerAI.getPosition().z+move <= bounds_playerAI_z) {
+            playerAI.translateLocal(Vector3f(0.0f, 0.0f, (speed_ai_player) * dt))
+            speed_ai_player = (move/dt)
         }
-
-        speed_ai_player += move
 
         if (speed_ai_player > max_speed_ai_player) {
             speed_ai_player = max_speed_ai_player
@@ -528,9 +560,11 @@ class Gamelogic (val window: GameWindow,
             speed_ai_player = -max_speed_ai_player
         }
 
-        //AI intersection -> same as player 2
-        if (ball.getPosition().x >= playerAI.getPosition().x-0.5 && ball.getPosition().x <= playerAI.getPosition().x+0.5 &&
-                ball.getPosition().z+0.5 <= playerAI.getPosition().z+2 && ball.getPosition().z-0.5 >= playerAI.getPosition().z-2) {
+        //AI intersection -> same as player 1 & 2
+        if (ball.getPosition().x <= playerAI.getPosition().x + playerWidth
+                && ball.getPosition().x >= playerAI.getPosition().x - playerWidth
+                && ball.getPosition().z + ballHalfHeight <= playerAI.getPosition().z + playerHalfHeight
+                && ball.getPosition().z - ballHalfHeight >= playerAI.getPosition().z - playerHalfHeight) {
             reverse(playerAI)
         }
     }
@@ -572,7 +606,7 @@ class Gamelogic (val window: GameWindow,
             spawnTime -= dt
 
             if (spawnTime <= 0f){
-                placeItem()
+                placeItem(dt)
                 spawnTime = SPAWN_TIME
             }
         }
