@@ -55,19 +55,16 @@ void main() {
     vertexData.normale = nor.xyz;
 
 
-    //different effects based on boolean values (int 1 == true)
+    //different effects based on int values
     if (chaos == 1) {
         float strength = 0.3;
         vec2 pos = vec2(tc.x + sin(time) * strength, tc.y + cos(time) * strength);
         vertexData.texture = pos * tcMultiplier;
-    } else {
-        vertexData.texture = tc * tcMultiplier;
     }
 
     if (shake == 1) {
         float strength = 0.5;
         gl_Position.x += cos(time * 10) * strength;
         gl_Position.y += cos(time * 15) * strength;
-        //gl_Position.z += cos(time * 10) * strength;
     }
 }

@@ -14,15 +14,7 @@ uniform float time;
 void main() {
     TexCoords = aPos;
     vec4 pos = projection * view * vec4(aPos, 1.0);
-    gl_Position = pos.xyww;
-
-    if (chaos == 1) {
-        float strength = 0.3;
-        vec3 pos = vec3(aPos.x + sin(time) * strength, aPos.y + cos(time) * strength, aPos.z + sin(time) * strength);
-        TexCoords = pos;
-    } else {
-        TexCoords = aPos;
-    }
+    gl_Position = pos.xyww; //set z component equal to its w component -> z component always equal to 1.0
 
     if (shake == 1) {
         float strength = 15;

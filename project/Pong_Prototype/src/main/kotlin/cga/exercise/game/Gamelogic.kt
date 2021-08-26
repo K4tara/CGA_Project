@@ -19,7 +19,7 @@ class Gamelogic (val window: GameWindow,
                  val ball: Renderable,
                  val player1: Renderable,
                  val player2: Renderable,
-                 val playerAI: Renderable,
+                 val playerBot: Renderable,
                  val item: Renderable,
                  val wallUp: Renderable,
                  val wallDown: Renderable,
@@ -151,9 +151,12 @@ class Gamelogic (val window: GameWindow,
 
         if(window.getKeyState(GLFW.GLFW_KEY_R)){
 
-            pause = false
             text.translateLocal(Vector3f(0.0f, -5.0f, 0.0f))
             resetGame(ball.getPosition().x, ball.getPosition().z, dt)
+
+            player1.translateLocal(Vector3f(0f,0f, -player1.getPosition().z))
+            player2.translateLocal(Vector3f(0f,0f, -player2.getPosition().z))
+            playerBot.translateLocal(Vector3f(0f,0f, -playerBot.getPosition().z))
 
             if(player1Score==1){
                 score_p2.translateLocal(Vector3f(0.2f, 0.0f,0.0f))
@@ -218,6 +221,7 @@ class Gamelogic (val window: GameWindow,
                 println("RESTART")
                 println("SCORE  $player1Score : $player2Score")
             }
+            pause = false
         }
     }
 
@@ -376,6 +380,7 @@ class Gamelogic (val window: GameWindow,
         endEffect()
 
         ball.translateLocal(Vector3f(-posX * resetFactor, 0.0f, -posZ * resetFactor))
+
         rolling = true
     }
 
@@ -543,12 +548,12 @@ class Gamelogic (val window: GameWindow,
         speedZ / 1.4
     }
 
-    fun playerAI(dt: Float) {
-        val move = (ball.getPosition().z - playerAI.getPosition().z) * 0.8f //Faktor zum Abschwächen der KI
+    fun playerBot(dt: Float) {
+        val move = (ball.getPosition().z - playerBot.getPosition().z) * 0.8f //Faktor zum Abschwächen der KI
 
         //stays in bounds
-        if (playerAI.getPosition().z+move >= -bounds_playerAI_z && playerAI.getPosition().z+move <= bounds_playerAI_z) {
-            playerAI.translateLocal(Vector3f(0.0f, 0.0f, (speed_ai_player) * dt))
+        if (playerBot.getPosition().z+move >= -bounds_playerAI_z && playerBot.getPosition().z+move <= bounds_playerAI_z) {
+            playerBot.translateLocal(Vector3f(0.0f, 0.0f, (speed_ai_player) * dt))
             speed_ai_player = (move/dt)
         }
 
@@ -561,11 +566,11 @@ class Gamelogic (val window: GameWindow,
         }
 
         //AI intersection -> same as player 1 & 2
-        if (ball.getPosition().x <= playerAI.getPosition().x + playerWidth
-                && ball.getPosition().x >= playerAI.getPosition().x - playerWidth
-                && ball.getPosition().z + ballHalfHeight <= playerAI.getPosition().z + playerHalfHeight
-                && ball.getPosition().z - ballHalfHeight >= playerAI.getPosition().z - playerHalfHeight) {
-            reverse(playerAI)
+        if (ball.getPosition().x <= playerBot.getPosition().x + playerWidth
+                && ball.getPosition().x >= playerBot.getPosition().x - playerWidth
+                && ball.getPosition().z + ballHalfHeight <= playerBot.getPosition().z + playerHalfHeight
+                && ball.getPosition().z - ballHalfHeight >= playerBot.getPosition().z - playerHalfHeight) {
+            reverse(playerBot)
         }
     }
 

@@ -97,7 +97,7 @@ class Skybox {
 
         shader.use()
 
-        val viewMatrix = Matrix4f(Matrix3f(camera.getCalculateViewMatrix()))
+        val viewMatrix = Matrix4f(Matrix3f(camera.getCalculateViewMatrix())) //remove any translation, but keep rotation transformations
         shader.setUniform("view", viewMatrix,false)
         shader.setUniform("projection", camera.getCalculateProjectionMatrix(),false)
         shader.setUniform("skybox", 0)

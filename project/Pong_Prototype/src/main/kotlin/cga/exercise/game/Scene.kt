@@ -14,7 +14,6 @@ import cga.framework.GLError
 import cga.framework.GameWindow
 import cga.framework.OBJLoader
 import org.joml.*
-import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.opengl.GL11.*
 
 class Scene(private val window: GameWindow) {
@@ -37,7 +36,7 @@ class Scene(private val window: GameWindow) {
     private var ball = Renderable()
     private var player1 = Renderable()
     private var player2 = Renderable()
-    private var playerAI = Renderable()
+    private var playerBot = Renderable()
     private var item = Renderable()
     private var wallUp = Renderable()
     private var wallDown = Renderable()
@@ -93,7 +92,7 @@ class Scene(private val window: GameWindow) {
         transformations()
 
         //actual game setup
-        gamelogic = Gamelogic(window, camera, ball, player1, player2, playerAI, item, wallUp,
+        gamelogic = Gamelogic(window, camera, ball, player1, player2, playerBot, item, wallUp,
                 wallDown, text, text_score, text_p1_won, text_p2_won, score_p1, score_p2, score_bar)
     }
 
@@ -118,7 +117,7 @@ class Scene(private val window: GameWindow) {
 
         //if single player mode activate AI
         if (gamelogic.singlePlayer) {
-            gamelogic.playerAI(dt)
+            gamelogic.playerBot(dt)
         }
 
         //end effect after some time
@@ -162,8 +161,8 @@ class Scene(private val window: GameWindow) {
 
         //render player2 if multiplayer, AI if singleplayer
         if (gamelogic.singlePlayer) {
-            playerAI.render(useShader)
-            pointLight_player2.parent = playerAI
+            playerBot.render(useShader)
+            pointLight_player2.parent = playerBot
         } else {
             player2.render(useShader)
             pointLight_player2.parent = player2
@@ -238,7 +237,7 @@ class Scene(private val window: GameWindow) {
                 "assets/textures/player2_diff.png",
                 "assets/textures/player2_spec.png")
 
-        load_models_assign_textures(vertexAttributes, playerAI,
+        load_models_assign_textures(vertexAttributes, playerBot,
                 "assets/models/player.obj",
                 "assets/textures/player2_emit.png",
                 "assets/textures/player2_diff.png",
@@ -326,8 +325,8 @@ class Scene(private val window: GameWindow) {
         player1.translateLocal(Vector3f(-12.0f, 0.0f, 0.0f))
         player2.scaleLocal(Vector3f(0.8f))
         player2.translateLocal(Vector3f(12.0f, 0.0f, 0.0f))
-        playerAI.scaleLocal(Vector3f(0.8f))
-        playerAI.translateLocal(Vector3f(12.0f, 0.0f, 0.0f))
+        playerBot.scaleLocal(Vector3f(0.8f))
+        playerBot.translateLocal(Vector3f(12.0f, 0.0f, 0.0f))
 
         ball.scaleLocal(Vector3f(0.4f))
         ball.translateLocal(Vector3f(0.0f, 0.0f, 0.0f))
