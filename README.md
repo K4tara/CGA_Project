@@ -26,7 +26,7 @@ Im späteren Verlauf des Projekts können noch weitere Features hinzugefügt wer
 - Verschiedene Shaderprogramme (Effekte und Licht) _(Katrin)_
 - Verschiedene Kameraperspektiven _(Katrin)_
 - Lokaler Multiplayer _(Michael)_
-- Einfache KI _(Katrin)_
+- Einfacher Gegner Bot _(Katrin)_
 - Skybox _(Michael & Katrin)_
 - Sound _(Michael)_
 
