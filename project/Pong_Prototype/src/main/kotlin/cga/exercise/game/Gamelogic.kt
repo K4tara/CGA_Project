@@ -549,7 +549,7 @@ class Gamelogic (val window: GameWindow,
     }
 
     fun playerBot(dt: Float) {
-        val move = (ball.getPosition().z - playerBot.getPosition().z) * 0.8f //Faktor zum Abschwächen der KI
+        val move = (ball.getPosition().z - playerBot.getPosition().z)
 
         //stays in bounds
         if (playerBot.getPosition().z+move >= -bounds_playerAI_z && playerBot.getPosition().z+move <= bounds_playerAI_z) {
@@ -565,7 +565,7 @@ class Gamelogic (val window: GameWindow,
             speed_ai_player = -max_speed_ai_player
         }
 
-        //AI intersection -> same as player 1 & 2
+        //Bot intersection -> same as player 1 & 2
         if (ball.getPosition().x <= playerBot.getPosition().x + playerWidth
                 && ball.getPosition().x >= playerBot.getPosition().x - playerWidth
                 && ball.getPosition().z + ballHalfHeight <= playerBot.getPosition().z + playerHalfHeight
