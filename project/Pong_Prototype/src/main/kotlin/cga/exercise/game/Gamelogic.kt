@@ -99,6 +99,7 @@ class Gamelogic (val window: GameWindow,
     //Sounds
     private var sound_1: Clip
     private var sound_2: Clip
+    private var pongSound = true
 
 
     init {
@@ -318,7 +319,7 @@ class Gamelogic (val window: GameWindow,
         } else {
             println("PADDLE_REVERSE")
 
-            sound_2.start()
+            if (pongSound) sound_2.start()
 
             speedX *= -1
             speedZ += (ball.getPosition().z - obj.getPosition().z) * 1.2f // centerBall - centerPaddle; 1.2 = Konstante zur Erhöhung des Abprallwinkels
@@ -586,12 +587,14 @@ class Gamelogic (val window: GameWindow,
         if (window.getKeyState(GLFW.GLFW_KEY_F3)) {
             sound_1.start()
             sound_1.loop(Clip.LOOP_CONTINUOUSLY)
-            sound_2.start()
+            pongSound = true
+            //sound_2.start()
         }
 
         if (window.getKeyState(GLFW.GLFW_KEY_F4)) {
             sound_1.stop()
-            sound_2.stop()
+            pongSound = false
+            //sound_2.stop()
         }
     }
 
